@@ -1,0 +1,633 @@
+<title>Maletas Zambo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ficha de desenvolvimento de produto — visor 3D no topo, decisão (comparativo) logo abaixo, depois detalhes de fabricação */
+:root{
+  --bg:#f7f1e6; --panel:#fffdf8; --ink:#3b2219; --muted:#7a6457; --line:#e6dccb;
+  --mustard:#e09a2c; --mustard-soft:#f8e6c4; --paw:#f5b82e; --brown:#6b3a2a;
+  --ok:#3f7d5a; --warn:#b4621c;
+  --stage-a:#f3ead9; --stage-b:#e4d7c1;
+  --f-display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Nunito Sans", system-ui, -apple-system, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1c1613; --panel:#251d19; --ink:#f3e9dc; --muted:#b6a393; --line:#3a2e27;
+  --mustard:#f0b04a; --mustard-soft:#3d2e18; --paw:#f5b82e; --brown:#e8c7a8;
+  --ok:#7cc29a; --warn:#f0a35c; --stage-a:#2b2420; --stage-b:#191411; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1613; --panel:#251d19; --ink:#f3e9dc; --muted:#b6a393; --line:#3a2e27;
+  --mustard:#f0b04a; --mustard-soft:#3d2e18; --paw:#f5b82e; --brown:#e8c7a8;
+  --ok:#7cc29a; --warn:#f0a35c; --stage-a:#2b2420; --stage-b:#191411; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1200px;margin:0 auto;padding-block:28px 72px;display:grid;gap:34px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.12;font-weight:600}
+h1{font-size:clamp(34px,5vw,54px);letter-spacing:-.01em}
+h1 .z{color:var(--mustard)}
+h2{font-size:24px}
+h3{font-size:17px}
+p{margin:0;max-width:68ch}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{color:var(--muted);font-size:16.5px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header.top{display:grid;gap:12px}
+
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.seg{display:flex;gap:6px;align-items:center}
+.seg-l{font:500 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:600 15px var(--f-display);padding:10px 16px 10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;text-align:left}
+.tab .lt{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--mustard-soft);color:var(--brown);font:700 15px var(--f-display)}
+.tab small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--mustard);box-shadow:0 0 0 3px var(--mustard-soft)}
+.tab[aria-selected="true"] .lt{background:var(--mustard);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:2px solid var(--mustard);outline-offset:2px}
+
+.viewer{display:grid;grid-template-columns:minmax(0,1fr) 340px;border:1.5px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
+.stage{position:relative;min-height:560px;background:radial-gradient(ellipse at 50% 35%, var(--stage-a), var(--stage-b))}
+.stage canvas{display:block;width:100%;height:100%;position:absolute;inset:0;touch-action:none}
+.ctrls{position:absolute;left:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.btn{font:600 13px var(--f-body);padding:8px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.primary{background:var(--mustard);border-color:var(--mustard);color:#fff}
+.hint{position:absolute;left:12px;bottom:10px;font:12px var(--f-mono);color:var(--muted);pointer-events:none}
+.fallback{position:absolute;inset:0;display:grid;place-content:center;gap:6px;text-align:center;padding:24px;color:var(--muted)}
+.fallback b{color:var(--ink);font-family:var(--f-display);font-size:18px}
+aside.spec{border-left:1.5px solid var(--line);padding:20px;display:grid;gap:16px;align-content:start}
+.spec .desc{font-size:14px;color:var(--muted)}
+dl.kv{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+dl.kv dt{color:var(--muted);font-size:13px}
+dl.kv dd{margin:0;text-align:right;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.where{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.where li{display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:13.5px;align-items:baseline}
+.qty{font:500 12px var(--f-mono);background:var(--mustard-soft);color:var(--brown);border-radius:6px;padding:1px 7px;min-width:34px;text-align:center}
+
+section.block{display:grid;gap:14px;align-content:start}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.tbl{overflow-x:auto;border:1.5px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font:500 11.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);white-space:nowrap}
+tbody th{font-weight:600;color:var(--muted);font-size:13px;white-space:nowrap}
+td.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td,tr:last-child th{border-bottom:0}
+.cmp td{min-width:180px}
+.cmp .pick{background:color-mix(in srgb, var(--mustard-soft) 60%, transparent)}
+.chip{display:inline-block;font:600 11.5px var(--f-body);padding:2px 8px;border-radius:999px;background:var(--mustard);color:#fff;margin-left:6px;vertical-align:1px}
+.good{color:var(--ok)} .bad{color:var(--warn)}
+.note{border-left:4px solid var(--mustard);background:var(--mustard-soft);padding:14px 16px;border-radius:0 12px 12px 0;font-size:14.5px;display:grid;gap:6px}
+.note b{font-family:var(--f-display);font-weight:600;font-size:16px}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:10px}
+ol.steps li::marker{font-family:var(--f-mono);color:var(--mustard)}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:7px}
+.zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.zone{border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:14px 16px;display:grid;gap:6px;align-content:start}
+.zone b{font-family:var(--f-display);font-weight:600;font-size:18px}
+.zone p{font-size:14px;color:var(--muted)}
+.zl{font:500 11.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mustard)}
+.joint{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:16px}
+.joint svg{width:100%;height:auto}
+.joint svg .mdf{fill:var(--mustard-soft);stroke:var(--brown);stroke-width:1.5}
+.joint svg .mdf2{fill:var(--paw);fill-opacity:.55;stroke:var(--brown);stroke-width:1.5}
+.joint svg .cut{fill:var(--bg);stroke:var(--brown);stroke-width:1.5}
+.joint svg .arrow{fill:none;stroke:var(--brown);stroke-width:2}
+.joint svg text{font:11px var(--f-mono);fill:var(--muted)}
+.sheet-wrap{border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:14px;display:grid;gap:12px}
+.sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+svg.sheet{width:100%;height:auto;display:block}
+svg.sheet .mesa{fill:var(--bg);stroke:var(--muted);stroke-width:3;stroke-dasharray:14 8}
+svg.sheet .peca{stroke:var(--brown);stroke-width:1.6}
+svg.sheet .fix{fill:color-mix(in srgb, var(--mustard) 35%, transparent)}
+svg.sheet .mov{fill:color-mix(in srgb, var(--paw) 55%, transparent)}
+svg.sheet .cunha{fill:var(--brown)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+@media (max-width:900px){
+  .viewer{grid-template-columns:1fr}
+  aside.spec{border-left:0;border-top:1.5px solid var(--line)}
+  .stage{min-height:440px}
+  .cols{grid-template-columns:1fr}
+  .joint{grid-template-columns:1fr}
+  .joint svg{max-width:260px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Zambo · protótipos de mostruário de balcão · MDF cru 6 ou 8 mm · encaixe de meia-madeira</span>
+    <h1>Maletas <span class="z">Zambo</span></h1>
+    <p class="lede">Três maletas para levar o mostruário até a loja do cliente e abrir em cima do balcão. Todas usam as medidas reais dos produtos e o encaixe do reel: rasgos de meia-madeira, em que uma chapa desce dentro da outra e as pontas ficam aparentes. Sem cola e sem parafuso na estrutura.</p>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="seg" role="group" aria-label="Espessura da chapa">
+      <span class="seg-l">Chapa</span>
+      <button class="btn" id="t-6" aria-pressed="true">6 mm</button>
+      <button class="btn" id="t-8" aria-pressed="false">8 mm</button>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <div class="stage" id="stage">
+      <div class="ctrls">
+        <button class="btn primary" id="b-open">Fechar</button>
+        <button class="btn" id="b-explode" aria-pressed="false">Vista explodida</button>
+        <button class="btn" id="b-prod" aria-pressed="true">Produtos</button>
+      </div>
+      <div class="hint">arraste para girar · role ou pince para zoom</div>
+    </div>
+    <aside class="spec" id="spec"></aside>
+  </div>
+
+  <section class="block">
+    <h2>Qual levar para o cliente</h2>
+    <div class="tbl"><table class="cmp" id="cmp"></table></div>
+    <div class="note" id="reco"></div>
+  </section>
+
+  <section class="block">
+    <h2>Disposição dos produtos</h2>
+    <p class="lede">Sua ideia está certa na lógica principal: o que é colorido e leve fica no alto, e o que é volumoso e de toque fica embaixo. Montei a Escada assim, já no tamanho compacto de 60 × 38 × 40 cm.</p>
+    <div class="zones">
+      <div class="zone"><span class="zl">Topo · altura do olho</span><b>Bandanas G</b><p>É o produto mais colorido e o que mais vende pela foto. No balcão, o topo da maleta fica a uns 1,60 m do chão, na linha do olho de quem está em pé. A marca fica logo acima, no mesmo campo de visão.</p></div>
+      <div class="zone"><span class="zl">Meio · venda casada</span><b>Gravatas</b><p>Logo abaixo das bandanas, alternando as estampas. Assim o cliente vê o look completo, bandana e gravata, e o pedido sai com os dois.</p></div>
+      <div class="zone"><span class="zl">Prateleira do meio · grade de tamanhos</span><b>Bandanas P</b><p>Em leque, do lado direito da prateleira, na mesma ordem de estampas das G: o comprador vê a mesma estampa nos dois tamanhos sem precisar de explicação.</p></div>
+      <div class="zone"><span class="zl">Embaixo · toque</span><b>Cobertas deitadas</b><p>Com o rolo virado para o cliente, o forro claro aparece em espiral. Ficam na altura da mão, que é onde se compra tecido: o comprador precisa apertar.</p></div>
+      <div class="zone"><span class="zl">Prateleira do meio · impulso</span><b>Ossos</b><p>Do lado esquerdo da prateleira, dois pares com o P em cima do G, verde e marinho alternados. Ficam no meio da maleta, na altura em que a mão pega.</p></div>
+    </div>
+    <div class="note"><b>Na hora de apresentar</b><span>Deixe uma coberta meio desenrolada por cima da frente da bandeja, para o cliente pegar sem desmontar nada. Prenda a tabela de preços com QR code na parte de trás da tampa, que fica virada para você. Assim o cliente vê só produto e você tem o preço à mão.</span></div>
+  </section>
+
+  <section class="block">
+    <h2>Produtos e quantidades</h2>
+    <p class="lede">Medidas da sua lista. O kit completo tem 17 peças. Repetir a mesma estampa em dois tamanhos lado a lado vende a grade de tamanhos sem precisar explicar.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Produto</th><th style="text-align:right">Medida (cm)</th><th style="text-align:right">Vitrine</th><th style="text-align:right">Escada</th><th style="text-align:right">Baú</th><th>Mix sugerido</th></tr></thead>
+      <tbody>
+        <tr><td>Coberta enrolada</td><td class="n">30 × Ø16</td><td class="n">2</td><td class="n">3</td><td class="n">3</td><td>3 cores (verde-sálvia, marinho, aveia). Enrolada mostra o forro claro por dentro.</td></tr>
+        <tr><td>Bandana G</td><td class="n">24 × 19</td><td class="n">1</td><td class="n">3</td><td class="n">3</td><td rowspan="2">3 estampas (xadrez vermelho, preto e branco, azul), cada uma em G e P.</td></tr>
+        <tr><td>Bandana P</td><td class="n">20 × 16</td><td class="n">1</td><td class="n">3</td><td class="n">3</td></tr>
+        <tr><td>Gravata</td><td class="n">12 × 6</td><td class="n">4</td><td class="n">4</td><td class="n">4</td><td>2 estampas × 2 versões (com elástico e com presilha).</td></tr>
+        <tr><td>Pelúcia osso P</td><td class="n">17 × 9 × 4</td><td class="n">1</td><td class="n">2</td><td class="n">2</td><td rowspan="2">Verde e marinho em cada tamanho. O P em cima do G mostra a diferença de tamanho.</td></tr>
+        <tr><td>Pelúcia osso G</td><td class="n">27 × 14 × 6</td><td class="n">1</td><td class="n">2</td><td class="n">2</td></tr>
+        <tr><th>Total</th><td></td><td class="n"><b>10</b></td><td class="n"><b>17</b></td><td class="n"><b>17</b></td><td></td></tr>
+      </tbody>
+    </table></div>
+    <p class="lede" style="font-size:14px">A largura dos ossos (9 e 14 cm) foi estimada pela foto. Vale medir antes de cortar.</p>
+  </section>
+
+  <section class="block">
+    <h2>O encaixe</h2>
+    <div class="joint">
+      <svg viewBox="0 0 230 152" role="img" aria-label="Duas chapas: uma com rasgo de cima até a metade, outra com rasgo de baixo até a metade">
+        <rect class="mdf" x="8" y="40" width="96" height="80"/>
+        <rect class="cut" x="80" y="38" width="7" height="42"/>
+        <rect class="mdf2" x="126" y="40" width="96" height="80"/>
+        <rect class="cut" x="143" y="80" width="7" height="42"/>
+        <path class="arrow" d="M146.5 8 v24 m-6 -8 l6 8 l6 -8"/>
+        <text x="56" y="134" text-anchor="middle">parada</text><text x="56" y="146" text-anchor="middle">rasgo de cima</text><text x="174" y="134" text-anchor="middle">desce</text><text x="174" y="146" text-anchor="middle">rasgo de baixo</text>
+      </svg>
+      <ul class="plain">
+        <li><b>Meia-madeira nos quatro cantos</b>, igual ao reel: uma chapa tem rasgo de cima até a metade da altura, a outra tem rasgo de baixo até a metade. Uma desce dentro da outra e as duas ficam travadas.</li>
+        <li><b>Pontas aparentes</b> de 2 cm sobrando para fora em cada canto. É o acabamento do reel e serve de proteção para as quinas.</li>
+        <li><b>Na Escada, é só rasgo, sem nenhuma aba:</b> as paredes em pé descem umas nas outras, e as chapas deitadas (piso, tampo, prateleira e piso da tampa) entram deslizando no rasgo da lateral. Uma chapa deitada só cruza uma chapa em pé com rasgo dessa forma. Os varões são tiras em pé, também em rasgo. Na Vitrine e na Baú, pisos e prateleiras ainda entram com linguetas.</li>
+        <li>As paredes que descem ficam no lugar pelo próprio peso. Com a maleta fechada, a tampa ou a porta não deixa nada subir.</li>
+        <li>Desmonta em um minuto e vira um pacote de chapas planas. Ferragem só na dobradiça, no fecho e na alça, com parafuso M3 e porca.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="block">
+      <h2 id="h-bom">Lista de peças</h2>
+      <div class="tbl"><table><thead><tr><th>Peça</th><th style="text-align:right">Qtd</th><th style="text-align:right">Medida (mm)</th></tr></thead><tbody id="bom"></tbody></table></div>
+      <h3>Ferragens</h3>
+      <ul class="plain" id="hw"></ul>
+    </section>
+    <section class="block">
+      <h2>Montagem</h2>
+      <ol class="steps" id="steps"></ol>
+    </section>
+  </div>
+
+  <section class="block">
+    <h2>Plano de corte</h2>
+    <p class="lede" id="sheet-lede"></p>
+    <div class="sheet-wrap">
+      <div class="sheets" id="sheets"></div>
+      <div class="legend"><span><i style="background:color-mix(in srgb, var(--mustard) 35%, transparent);border:1px solid var(--brown)"></i>Corpo</span><span><i style="background:color-mix(in srgb, var(--paw) 55%, transparent);border:1px solid var(--brown)"></i>Tampa ou porta</span></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Antes de cortar</h2>
+    <div class="cols">
+      <ul class="plain">
+        <li>Arquivos DXF em milímetros, prontos para laser com mesa de 1300 × 900 mm. Camadas: <span class="mono">CORTE_INTERNO</span> (cortar primeiro), <span class="mono">CORTE_EXTERNO</span>, <span class="mono">GRAVACAO</span>. A camada <span class="mono">GRAVACAO_VERSO</span> é gravada com a peça virada.</li>
+        <li>Folga dos rasgos: 0,15 mm. Confirme o kerf da máquina e a espessura real da chapa: MDF de 6 mm costuma vir entre 5,5 e 6,3 mm, e o de 8 mm entre 7,6 e 8,3 mm. Use o arquivo da espessura que você vai comprar (final _6mm ou _8mm).</li>
+        <li>Corte primeiro um canto de teste (dois pedaços com rasgo) para acertar a folga antes da chapa inteira.</li>
+      </ul>
+      <ul class="plain">
+        <li>As gravações já usam os logos oficiais (logo principal nos painéis e selo redondo nas laterais), vetorizados a partir das imagens enviadas. Se tiver o arquivo vetorial original (AI, SVG ou PDF), troque para um traço ainda mais limpo.</li>
+        <li>Para o transporte: elástico chato de 20 mm nos varões e uma placa de EVA de 5 mm no piso evitam que os produtos se mexam.</li>
+        <li>Acabamento do MDF cru: seladora fosca ou cera incolor. Protege de mão e umidade sem perder a cor natural.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATASETS = __DATASETS__;
+let DATA = DATASETS["6"];
+const BONE = __BONE__;
+const LOGOS = __LOGOS__;
+const ORDER = ["B", "C", "A"];
+const INFO = {
+  A: {
+    tag: "Vitrine", sub: "kit de visita · 10 peças",
+    desc: "Maleta tipo pasta, como a caixa laranja. A tampa abre a 100° e vira o painel com a marca, uma bandana de cada tamanho e uma gravata. Na base ficam os rolos de coberta, as gravatas num piso elevado e os ossos.",
+    where: [[2,"Cobertas","deitadas em berços, mostrando o rolo"],[2,"Bandanas","G e P no varão da tampa"],[4,"Gravatas","1 na tampa e 3 em nichos elevados"],[2,"Pelúcias","osso P em cima do G"]],
+    hw: ["2 dobradiças metálicas de 50 mm na traseira (inox ou latão)", "1 limitador de tampa (compasso) para segurar a 100°", "2 fechos de mala na frente", "1 alça de couro no tampo, com 2 ponteiras metálicas", "Parafusos M3 × 12 com porca para todas as ferragens"],
+    steps: ["Base: encaixe as linguetas do piso nos rasgos da frente e do fundo, com as duas em pé.",
+      "Coloque as duas divisórias, os berços dos rolos e o piso elevado das gravatas. Tudo encaixa no piso, na frente e no fundo.",
+      "Desça as laterais pelos rasgos de baixo sobre os rasgos dos cantos da frente e do fundo.",
+      "Tampa: tampo e varão encaixam nas laterais da tampa. A frente e o fundo da tampa entram por baixo, pelos rasgos.",
+      "Parafuse as dobradiças na traseira, o limitador, os fechos e a alça."]
+  },
+  B: {
+    tag: "Escada", sub: "seu esboço · 17 peças",
+    desc: "A tampa gira 180° para trás e continua a rampa das laterais. Aberta, vira uma mini gôndola: bandanas G no alto da tampa e gravatas no meio dela, ossos e bandanas P na prateleira do meio e cobertas deitadas embaixo. Fechada, é uma caixa de 60 × 38 × 40 cm com alças vazadas.",
+    where: [[3,"Bandanas G","topo da tampa, na altura do olho"],[4,"Gravatas","varão no meio da tampa"],[3,"Bandanas P","em leque, lado direito da prateleira"],[4,"Pelúcias","lado esquerdo da prateleira, P em cima do G"],[3,"Cobertas","deitadas embaixo, rolo virado para o cliente"]],
+    hw: ["2 dobradiças de chapa de 76 × 50 mm (3 furos por aba), uma em cada canto da emenda entre o tampo da alça e a tampa", "1 alça de couro no tampo da base, com 2 ponteiras metálicas (deita quando a tampa abre)", "2 fechos de pressão tipo maleta na frente, na emenda entre a tampa e a bandeja (travam a tampa para carregar)", "4 pés de borracha adesivos", "Parafusos M3 × 12 com porca"],
+    steps: ["Só rasgo, sem nenhuma aba: cada peça tem um rasgo até a metade e entra no rasgo da outra, com 2 cm de ponta para fora.",
+      "Com as duas laterais em pé, passe o piso por trás pelos rasgos de baixo. Desça o fundo nos rasgos dos cantos de trás: ele trava o piso.",
+      "Passe o tampo da alça pela frente, nos rasgos do alto das laterais.",
+      "Passe a prateleira do meio pela frente, pelos rasgos das duas laterais, acima das cobertas.",
+      "Desça a frente da bandeja nos rasgos da frente: ela fecha a base.",
+      "Tampa: o painel desce nos rasgos de trás; o piso da tampa entra pela frente; o varão das bandanas desce de cima e o das gravatas entra por baixo, antes do piso.",
+      "Parafuse as duas dobradiças nos cantos da emenda do tampo, a alça de couro e os fechos."]
+  },
+  C: {
+    tag: "Baú", sub: "abre como livro · 17 peças",
+    desc: "Corpo com as cobertas em pé e os ossos na prateleira. A porta abre de lado e traz as bandanas e as gravatas penduradas em três varões, na altura do olho de quem está do outro lado do balcão.",
+    where: [[3,"Cobertas","em pé no corpo, suporte em U"],[6,"Bandanas","G e P em varões na porta"],[4,"Gravatas","no varão de baixo da porta"],[4,"Pelúcias","em fila na prateleira"]],
+    hw: ["2 dobradiças metálicas de 64 mm na quina direita", "2 fechos de mala na quina esquerda", "1 alça de couro no tampo do corpo, com 2 ponteiras metálicas", "4 pés de borracha", "Parafusos M3 × 12 com porca"],
+    steps: ["Corpo: base, tampo, prateleira e suporte dos rolos encaixam nas duas laterais.",
+      "Desça o fundo pelos rasgos dos cantos de trás. A frente baixa da prateleira encaixa por cima.",
+      "Porta: base, tampo e os três varões nas laterais da porta. A frente da porta desce pelos rasgos.",
+      "Parafuse as dobradiças na quina direita, os fechos na esquerda e a alça no tampo."]
+  }
+};
+const fmt = v => (v/10).toLocaleString("pt-BR", {maximumFractionDigits: 1});
+const dims = d => `${fmt(d.L)} × ${fmt(d.P)} × ${fmt(d.A)} cm`;
+
+// ---------- tabela comparativa ----------
+function renderCmp(){
+  const rows = [
+    ["Formato", k => ({A:"Pasta, tampa vira vitrine", B:"Caixa compacta que vira gôndola", C:"Baú que abre como livro"})[k]],
+    ["Fechada (L × P × A)", k => dims(DATA[k].fechada)],
+    ["Aberta no balcão", k => dims(DATA[k].aberta)],
+    ["Peso do MDF", k => `${DATA[k].peso.toLocaleString("pt-BR")} kg`],
+    ["Kit", k => `${Object.values(DATA[k].kit).reduce((a,b)=>a+b,0)} peças`],
+    ["Peças de MDF", k => `${DATA[k].pecas} (${DATA[k].encaixes} encaixes de rasgo)`],
+    ["Chapas 1300 × 900", k => DATA[k].chapas],
+    ["Melhor para", k => ({A:"Primeira visita e prospecção. Cabe embaixo do braço.", B:"Apresentação completa. Ocupa o mesmo espaço aberta ou fechada.", C:"Impacto na abertura. Bandanas na altura do olho."})[k]],
+    ["Ponto de atenção", k => ({A:"Leva só 2 das 6 bandanas e 2 das 4 pelúcias.", B:"É compacta: as bandanas G se sobrepõem um pouco no varão de 55 cm.", C:"Aberta ocupa 1,12 m de balcão."})[k]],
+  ];
+  const head = `<thead><tr><th></th>${ORDER.map(k => `<th class="${k==="B"?"pick":""}">${INFO[k].tag}${k==="B"?'<span class="chip">recomendada</span>':""}</th>`).join("")}</tr></thead>`;
+  const body = rows.map(([t, f]) => `<tr><th>${t}</th>${ORDER.map(k => `<td class="${k==="B"?"pick":""}">${f(k)}</td>`).join("")}</tr>`).join("");
+  document.getElementById("cmp").innerHTML = head + `<tbody>${body}</tbody>`;
+  document.getElementById("reco").innerHTML = `<b>Recomendação: começar pela Escada, com a Vitrine como versão leve</b>
+    <span>A Escada é o seu esboço e leva o kit completo. Ela abre sem ocupar mais balcão do que fechada e fica com cara de gôndola de loja, o que ajuda o comprador a imaginar o produto no ponto de venda. Para visitas rápidas, a Vitrine pesa um terço a menos e mostra o essencial. Chapa de 6 mm deixa a maleta mais leve para carregar; 8 mm deixa os rasgos mais firmes e aguenta mais pancada. Vale cortar antes em papelão ou MDF de 3 mm para sentir o tamanho na mão.</span>`;
+}
+renderCmp();
+
+// ---------- UI ----------
+const tabsEl = document.getElementById("tabs");
+ORDER.forEach(k => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.setAttribute("role", "tab"); b.id = "tab-" + k;
+  b.innerHTML = `<span class="lt">${k}</span><span>Maleta ${INFO[k].tag}<small>${INFO[k].sub}</small></span>`;
+  b.onclick = () => select(k); tabsEl.appendChild(b);
+});
+function renderInfo(k){
+  const d = DATA[k], I = INFO[k];
+  document.getElementById("spec").innerHTML = `
+    <div><span class="eyebrow">Protótipo ${k}</span><h2>Maleta ${I.tag}</h2></div>
+    <p class="desc">${I.desc}</p>
+    <dl class="kv">
+      <dt>Fechada (L × P × A)</dt><dd>${dims(d.fechada)}</dd>
+      <dt>Aberta</dt><dd>${dims(d.aberta)}</dd>
+      <dt>Peso do MDF</dt><dd>${d.peso.toLocaleString("pt-BR")} kg</dd>
+      <dt>Peças de MDF</dt><dd>${d.pecas}</dd>
+      <dt>Encaixes de rasgo</dt><dd>${d.encaixes}</dd>
+      <dt>Chapas 1300 × 900</dt><dd>${d.chapas}</dd>
+    </dl>
+    <div><h3 style="margin-bottom:8px">Onde fica cada produto</h3>
+    <ul class="where">${I.where.map(w => `<li><span class="qty">${w[0]}×</span><span><b>${w[1]}</b> · ${w[2]}</span></li>`).join("")}</ul></div>`;
+  document.getElementById("h-bom").textContent = `Lista de peças · Maleta ${I.tag}`;
+  document.getElementById("bom").innerHTML = d.bom.map(b => `<tr><td>${b.peca}</td><td class="n">${b.qtd}</td><td class="n">${b.dim}</td></tr>`).join("");
+  document.getElementById("hw").innerHTML = I.hw.map(h => `<li>${h}</li>`).join("");
+  document.getElementById("steps").innerHTML = I.steps.map(s => `<li>${s}</li>`).join("");
+  document.getElementById("sheets").innerHTML = d.sheets.join("");
+  document.getElementById("sheet-lede").textContent = `Maleta ${I.tag}: ${d.chapas} ${d.chapas > 1 ? "mesas" : "mesa"} de laser de 1300 × 900 mm, com ${d.aproveitamento}% de aproveitamento. As sobras dão para cortar as peças de teste.`;
+}
+var state = {k: "B", open: true, explode: false, prod: true, t: "6"};
+var V3 = null;
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+if (typeof THREE === "undefined") throw new Error("three.js indisponível");
+const stage = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 10, 20000);
+const controls = {
+  target: new THREE.Vector3(), r: 2000, th: 0.6, ph: 1.1,
+  sync(){ const o = camera.position.clone().sub(this.target); this.r = o.length(); this.th = Math.atan2(o.x, o.z); this.ph = Math.acos(o.y / this.r); },
+  update(){
+    this.ph = Math.min(Math.max(this.ph, 0.08), Math.PI*0.495); this.r = Math.min(Math.max(this.r, 300), 6000);
+    const s = Math.sin(this.ph);
+    camera.position.set(this.target.x + this.r*s*Math.sin(this.th), this.target.y + this.r*Math.cos(this.ph), this.target.z + this.r*s*Math.cos(this.th));
+    camera.lookAt(this.target);
+  }
+};
+(() => {
+  const el = renderer.domElement, pts = new Map(); let pinch = 0;
+  el.addEventListener("pointerdown", e => { el.setPointerCapture(e.pointerId); pts.set(e.pointerId, {x: e.clientX, y: e.clientY}); });
+  const end = e => { pts.delete(e.pointerId); pinch = 0; };
+  el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
+  el.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    if (pts.size === 1){ controls.th -= (e.clientX - prev.x)*0.008; controls.ph -= (e.clientY - prev.y)*0.008; }
+    else if (pts.size === 2){ const [a, b] = [...pts.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch) controls.r *= pinch / d; pinch = d; }
+  });
+  el.addEventListener("wheel", e => { e.preventDefault(); controls.r *= Math.exp(e.deltaY*0.001); }, {passive: false});
+})();
+scene.add(new THREE.HemisphereLight(0xfff8ee, 0x8a7f70, 0.72));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(700, 1600, 1200); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, {left: -1000, right: 1000, top: 1000, bottom: -1000, near: 100, far: 5000});
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.ShadowMaterial({opacity: 0.16}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+function canvasTex(w, h, draw, rep){
+  const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  if (rep) t.repeat.set(rep, rep); t.anisotropy = 4; return t;
+}
+const MDF_TEX = canvasTex(256, 256, (g) => {
+  g.fillStyle = "#c9a477"; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 9000; i++){ g.fillStyle = Math.random() < .5 ? "rgba(120,82,45,.10)" : "rgba(255,240,215,.10)"; g.fillRect(Math.random()*256, Math.random()*256, 1.3, 1.3); }
+}, 0.006);
+const MDF = new THREE.MeshStandardMaterial({map: MDF_TEX, roughness: .9, side: THREE.DoubleSide});
+const HWM = {
+  metal: new THREE.MeshStandardMaterial({color: 0xc9ccd0, metalness: .85, roughness: .32}),
+  screw: new THREE.MeshStandardMaterial({color: 0x8d9196, metalness: .8, roughness: .45}),
+  leather: new THREE.MeshStandardMaterial({color: 0x5b3220, roughness: .62, metalness: .05})
+};
+const stitchTex = canvasTex(64, 256, (g, w, h) => {
+  g.fillStyle = "#5b3220"; g.fillRect(0, 0, w, h);
+  g.strokeStyle = "rgba(240,220,190,.75)"; g.lineWidth = 3; g.setLineDash([10, 8]);
+  [9, w - 9].forEach(x => { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); });
+});
+HWM.leather.map = stitchTex;
+const WEDGE = new THREE.MeshStandardMaterial({color: 0x9b6a3c, roughness: .85, side: THREE.DoubleSide});
+const EDGE = new THREE.LineBasicMaterial({color: 0x6b4a2c, transparent: true, opacity: .5});
+
+// estampas
+function check(c1, c2, size){
+  return canvasTex(128, 128, (g, w) => {
+    g.fillStyle = c1; g.fillRect(0, 0, w, w);
+    g.fillStyle = c2; g.globalAlpha = .55; g.fillRect(0, 0, w/2, w); g.fillRect(0, 0, w, w/2);
+    g.globalAlpha = 1; g.fillRect(0, 0, w/2, w/2);
+  }, 1/size);
+}
+const PATS = {
+  buffalo_red: check("#c8261d", "#151515", 34),
+  gingham_bw: check("#ece8de", "#1e1e1e", 26),
+  buffalo_blue: check("#2f62b3", "#101826", 70),
+  ladybug: canvasTex(128, 128, (g, w) => {
+    g.fillStyle = "#efe6cf"; g.fillRect(0, 0, w, w);
+    [[30, 34], [92, 70], [48, 104], [104, 18]].forEach(([x, y]) => { g.fillStyle = "#c8312b"; g.beginPath(); g.arc(x, y, 11, 0, 7); g.fill(); g.fillStyle = "#1b1b1b"; g.beginPath(); g.arc(x - 9, y, 5, 0, 7); g.fill(); });
+    g.fillStyle = "#e0703a"; [[70, 40], [16, 80], [86, 112]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill(); });
+  }, 1/45),
+  polka_teal: canvasTex(64, 64, (g, w) => {
+    g.fillStyle = "#53c3c0"; g.fillRect(0, 0, w, w); g.fillStyle = "#e9fbfa";
+    [[16, 16], [48, 48]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); });
+  }, 1/14)
+};
+const PLUSH = {sage: 0x8fae94, navy: 0x2c3e5c, oat: 0xd8c7a8};
+const LINING = {sage: "#efe6d2", navy: "#d9dde3", oat: "#f6efe2"};
+function plushMat(col){ return new THREE.MeshStandardMaterial({color: PLUSH[col], roughness: 1}); }
+function spiralTex(col){
+  return canvasTex(256, 256, (g, w) => {
+    const c1 = "#" + PLUSH[col].toString(16).padStart(6, "0"), c2 = LINING[col];
+    g.fillStyle = c1; g.fillRect(0, 0, w, w);
+    g.lineWidth = 9; g.lineCap = "round";
+    for (let k = 0; k < 2; k++){
+      g.strokeStyle = k ? c2 : c1; g.beginPath();
+      for (let a = 0; a < Math.PI*9; a += 0.08){ const r = 8 + a*4.1 + k*4.5; g.lineTo(w/2 + r*Math.cos(a), w/2 + r*Math.sin(a)); }
+      g.stroke();
+    }
+  });
+}
+
+function makeProduct(p){
+  const [sx, sy, sz] = p.s, grp = new THREE.Group();
+  if (p.t === "coberta"){
+    const side = plushMat(p.col), end = new THREE.MeshStandardMaterial({map: spiralTex(p.col), roughness: 1});
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(sy/2, sy/2, sx, 40, 1), [side, end, end]);
+    m.rotation.z = Math.PI/2; grp.add(m);
+    const lab = new THREE.Mesh(new THREE.BoxGeometry(60, 1.5, 22), new THREE.MeshStandardMaterial({color: 0xf7f3ea, roughness: .8}));
+    lab.position.set(sx*0.25, 0, sy/2 - 1); lab.rotation.x = Math.PI/2; grp.add(lab);
+  } else if (p.t === "bandana"){
+    const tex = PATS[p.pat].clone(); tex.needsUpdate = true;
+    const mat = new THREE.MeshStandardMaterial({map: tex, roughness: .95, side: THREE.DoubleSide});
+    const collar = sy*0.24, s = new THREE.Shape();
+    s.moveTo(-sx/2, sy/2); s.lineTo(sx/2, sy/2); s.lineTo(sx/2, sy/2 - collar); s.lineTo(0, -sy/2); s.lineTo(-sx/2, sy/2 - collar); s.lineTo(-sx/2, sy/2);
+    const geo = new THREE.ExtrudeGeometry(s, {depth: 3, bevelEnabled: false}); geo.translate(0, 0, -1.5);
+    grp.add(new THREE.Mesh(geo, mat));
+    const fold = new THREE.Mesh(new THREE.BoxGeometry(sx, 3, 5), mat); fold.position.set(0, sy/2 - collar, 2.2); grp.add(fold);
+    const tag = new THREE.Mesh(new THREE.BoxGeometry(22, 12, 1), new THREE.MeshStandardMaterial({color: 0xf3ead8}));
+    tag.position.set(sx*0.12, -sy*0.22, 2.2); tag.rotation.z = -0.5; grp.add(tag);
+  } else if (p.t === "osso"){
+    const s = new THREE.Shape(BONE.map(([x, y]) => new THREE.Vector2(x*(sx - 14), y*(sy - 14))));
+    const geo = new THREE.ExtrudeGeometry(s, {depth: sz - 14, bevelEnabled: true, bevelThickness: 7, bevelSize: 7, bevelSegments: 4, curveSegments: 6});
+    geo.translate(0, 0, -(sz - 14)/2);
+    grp.add(new THREE.Mesh(geo, plushMat(p.col)));
+    const tag = new THREE.Mesh(new THREE.BoxGeometry(10, 18, 2), new THREE.MeshStandardMaterial({color: 0xf3ead8}));
+    tag.position.set(sx*0.08, -sy*0.38, sz/2 + 1); grp.add(tag);
+  } else if (p.t === "gravata"){
+    const tex = PATS[p.pat].clone(); tex.needsUpdate = true;
+    const mat = new THREE.MeshStandardMaterial({map: tex, roughness: .9});
+    const s = new THREE.Shape([[-.5,.45],[-.08,.14],[.08,.14],[.5,.45],[.5,-.45],[.08,-.14],[-.08,-.14],[-.5,-.45]].map(([x, y]) => new THREE.Vector2(x*(sx - 10), y*(sy - 10))));
+    const geo = new THREE.ExtrudeGeometry(s, {depth: sz*0.45, bevelEnabled: true, bevelThickness: 5, bevelSize: 5, bevelSegments: 3});
+    geo.translate(0, 0, -sz*0.32);
+    grp.add(new THREE.Mesh(geo, mat));
+    const knot = new THREE.Mesh(new THREE.BoxGeometry(sx*0.16, sy*0.42, sz*0.75), mat); knot.position.z = 2; grp.add(knot);
+  }
+  grp.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  const M = new THREE.Matrix4().makeBasis(new THREE.Vector3(...p.U), new THREE.Vector3(...p.V), new THREE.Vector3(...p.W)).setPosition(...p.c);
+  const holder = new THREE.Group(); grp.matrixAutoUpdate = false; grp.matrix.copy(M); holder.add(grp);
+  return holder;
+}
+
+const LOGO_TEX = {};
+function logoTex(name){
+  if (!LOGO_TEX[name]){ const t = new THREE.TextureLoader().load(LOGOS[name].src); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; LOGO_TEX[name] = t; }
+  return LOGO_TEX[name];
+}
+const v3 = a => new THREE.Vector3(a[0], a[1], a[2]);
+const geoCache = {};
+let root = null, mov = null, movInner = null, pivot = null, items = [], prods = [], flats = [];
+
+function build(k){
+  if (root) scene.remove(root);
+  root = new THREE.Group(); scene.add(root);
+  const d = DATA[k]; pivot = d.pivot; items = []; prods = [];
+  mov = new THREE.Group(); mov.position.copy(v3(pivot.p));
+  movInner = new THREE.Group(); movInner.position.copy(v3(pivot.p)).multiplyScalar(-1);
+  mov.add(movInner); root.add(mov);
+  d.parts.forEach(p => {
+    const key = state.t + k + p.s;
+    if (!geoCache[key]){
+      const sh = d.shapes[p.s];
+      const shape = new THREE.Shape(sh.o.map(q => new THREE.Vector2(q[0], q[1])));
+      sh.h.forEach(h => shape.holes.push(new THREE.Path(h.map(q => new THREE.Vector2(q[0], q[1])))));
+      const g = new THREE.ExtrudeGeometry(shape, {depth: DATA[k].T, bevelEnabled: false, curveSegments: 8});
+      geoCache[key] = {g, e: new THREE.EdgesGeometry(g, 25)};
+    }
+    const {g, e} = geoCache[key];
+    const M = new THREE.Matrix4().makeBasis(v3(p.U), v3(p.V), v3(p.W)).setPosition(v3(p.o));
+    const inner = new THREE.Group(); inner.matrixAutoUpdate = false; inner.matrix.copy(M);
+    const mesh = new THREE.Mesh(g, p.k === "wedge" ? WEDGE : MDF); mesh.castShadow = mesh.receiveShadow = true;
+    inner.add(mesh); if (p.k !== "wedge") inner.add(new THREE.LineSegments(e, EDGE));
+    const holder = new THREE.Group(); holder.add(inner);
+    (p.g ? movInner : root).add(holder);
+    g.computeBoundingBox(); const c = new THREE.Vector3(); g.boundingBox.getCenter(c); c.applyMatrix4(M);
+    items.push({holder, c, g: p.g});
+    p.e.forEach(en => {
+      const w = en.h, h = en.h*LOGOS[en.text].aspect;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({map: logoTex(en.text), transparent: true, depthWrite: false}));
+      const n = v3(en.n), up = v3(en.up), right = new THREE.Vector3().crossVectors(up, n);
+      m.matrixAutoUpdate = false; m.matrix.makeBasis(right, up, n).setPosition(v3(en.c).add(n.clone().multiplyScalar(0.7)));
+      holder.add(m);
+    });
+  });
+  d.products.forEach(p => {
+    const h = makeProduct(p); h.visible = state.prod;
+    (p.g ? movInner : root).add(h); prods.push(h);
+    items.push({holder: h, c: v3(p.c), g: p.g, prod: true});
+  });
+  flats = [];
+  (d.hw || []).forEach(h => {
+    let obj;
+    if (h.k === "box"){
+      obj = new THREE.Mesh(new THREE.BoxGeometry(...h.s), HWM[h.m]);
+      obj.matrixAutoUpdate = false; obj.matrix.makeBasis(v3(h.U), v3(h.V), v3(h.W)).setPosition(v3(h.c));
+    } else if (h.k === "cyl"){
+      obj = new THREE.Mesh(new THREE.CylinderGeometry(h.r, h.r, h.l, 24), HWM[h.m]);
+      obj.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v3(h.a).normalize()); obj.position.copy(v3(h.c));
+    } else if (h.k === "strap"){
+      const curve = new THREE.CatmullRomCurve3(h.pts.map(p => new THREE.Vector3(p[0], p[1] - h.y0, p[2])));
+      const prof = new THREE.Shape(); const a = h.th/2, b = h.w/2;
+      prof.moveTo(-a, -b); prof.lineTo(a, -b); prof.lineTo(a, b); prof.lineTo(-a, b); prof.lineTo(-a, -b);
+      const geo = new THREE.ExtrudeGeometry(prof, {steps: 60, bevelEnabled: false, extrudePath: curve});
+      obj = new THREE.Group(); obj.position.y = h.y0; obj.add(new THREE.Mesh(geo, HWM.leather));
+      if (h.flat) flats.push(obj);
+    }
+    obj.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+    const holder = new THREE.Group(); holder.add(obj);
+    (h.g ? movInner : root).add(holder);
+    const c = h.k === "strap" ? v3(h.pts[12]) : v3(h.c);
+    items.push({holder, c, g: h.g});
+  });
+  const box = new THREE.Box3(); items.forEach(it => box.expandByPoint(it.c));
+  const ctr = box.getCenter(new THREE.Vector3());
+  items.forEach(it => it.dir = it.c.clone().sub(ctr));
+}
+function frame(k){
+  const d = DATA[k], A = d.aberta;
+  const tx = k === "C" ? A.L/4 : 0;
+  controls.target.set(tx, A.A*0.42, d.fechada.P*0.5);
+  const dist = Math.max(A.A, A.L*0.85, 520) * 2.55;
+  camera.position.set(tx + dist*0.5, A.A*0.42 + dist*0.42, d.fechada.P*0.5 + dist*0.78);
+  controls.sync(); controls.update();
+}
+const rad = THREE.MathUtils.degToRad;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let cur = 0, ex = 0;
+function tick(){
+  requestAnimationFrame(tick);
+  if (!pivot){ renderer.render(scene, camera); return; }
+  const rate = reduce ? 1 : 0.075;
+  const tgt = rad(state.open ? pivot.open : pivot.closed);
+  cur += (tgt - cur)*rate; if (Math.abs(tgt - cur) < 1e-3) cur = tgt;
+  if (pivot.axis === "x") mov.rotation.set(cur, 0, 0); else mov.rotation.set(0, cur, 0);
+  if (flats.length){   // alça de couro deita quando a tampa cobre o tampo
+    const span = rad(pivot.closed) - rad(pivot.open);
+    const closedness = span ? (cur - rad(pivot.open)) / span : 1;
+    flats.forEach(f => f.scale.y = 0.16 + 0.84*Math.min(1, Math.max(0, closedness)));
+  }
+  const e = state.explode ? 1 : 0; ex += (e - ex)*rate; if (Math.abs(e - ex) < 1e-3) ex = e;
+  items.forEach(it => it.holder.position.copy(it.dir).multiplyScalar(ex*0.5));
+  controls.update(); renderer.render(scene, camera);
+}
+function resize(){
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+V3 = {
+  show(k){ build(k); cur = rad(state.open ? pivot.open : pivot.closed); frame(k); },
+  setProd(v){ prods.forEach(m => m.visible = v); },
+  refresh(){ build(state.k); }
+};
+resize(); tick();
+</script>
+<script>
+const openLabel = () => document.getElementById("b-open").textContent = state.open ? "Fechar" : "Abrir";
+function select(k){
+  state.k = k; state.open = true; openLabel();
+  ORDER.forEach(x => document.getElementById("tab-" + x).setAttribute("aria-selected", x === k));
+  renderInfo(k); if (V3) V3.show(k);
+  try { localStorage.setItem("zambo-maleta", k); } catch(e){}
+}
+const press = (id, v) => document.getElementById(id).setAttribute("aria-pressed", v);
+function setT(t){
+  state.t = t; DATA = DATASETS[t]; press("t-6", t === "6"); press("t-8", t === "8");
+  renderCmp(); renderInfo(state.k); if (V3) V3.show(state.k);
+}
+document.getElementById("t-6").onclick = () => setT("6");
+document.getElementById("t-8").onclick = () => setT("8");
+document.getElementById("b-open").onclick = () => { state.open = !state.open; openLabel(); };
+document.getElementById("b-explode").onclick = () => { state.explode = !state.explode; press("b-explode", state.explode); };
+document.getElementById("b-prod").onclick = () => { state.prod = !state.prod; press("b-prod", state.prod); if (V3) V3.setProd(state.prod); };
+if (!V3){
+  const st = document.getElementById("stage");
+  st.querySelector(".ctrls").hidden = true; st.querySelector(".hint").hidden = true;
+  const msg = document.createElement("div"); msg.className = "fallback";
+  msg.innerHTML = "<b>O 3D não abriu neste aplicativo.</b><span>Abra o link no navegador do computador. Medidas, peças e plano de corte abaixo continuam válidos.</span>";
+  st.appendChild(msg);
+}
+let start = "B";
+try { const s = localStorage.getItem("zambo-maleta"); if (s && DATA[s]) start = s; } catch(e){}
+if (location.hash && DATA[location.hash.slice(1).toUpperCase()]) start = location.hash.slice(1).toUpperCase();
+select(start);
+document.fonts && document.fonts.ready.then(() => { if (V3) V3.refresh(); });
+</script>
