@@ -1,0 +1,5 @@
+__pycache__
+*.py
+*.json
+!vercel.json
+template*.html

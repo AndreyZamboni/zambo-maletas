@@ -2,6 +2,9 @@
 
 Display de balcão em formato de mala para levar o mostruário da Zambo (cobertas, bandanas, gravatas e pelúcias) até lojas e empresas. MDF cru de 6 ou 8 mm, cortado a laser, montado só por encaixe de meia-madeira (rasgo), sem cola e sem parafuso na estrutura.
 
+## Online
+O site publicado na Vercel abre o `index.html` (cópia da página de `entrega/`).
+
 ## Arquivos para usar
 - `entrega/Maletas-Zambo.html`: página completa (3D, disposição dos produtos, peças, montagem e plano de corte), pronta para enviar.
 - `maletas/maleta_B_escada_corte_6mm.dxf` e `_8mm.dxf`: corte a laser da Maleta Escada (a recomendada), mesa de 1300 × 900 mm.
