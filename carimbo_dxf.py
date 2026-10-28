@@ -1,5 +1,5 @@
 import ezdxf, glob, os
-for f in glob.glob("maletas/maleta_B_escada_corte_*mm.dxf"):
+for f in [f for f in glob.glob("maletas/maleta_B_escada_corte_*mm.dxf") if "carimbo" not in f]:
     doc = ezdxf.readfile(f)
     doc.layers.add("POSICAO_CARIMBO_NAO_CORTAR", color=8)
     n = 0

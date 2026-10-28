@@ -338,7 +338,7 @@ def build_B():
         return b.add(p)
     Ls, Rs = side("Base lateral esq.", X0), side("Base lateral dir.", X1 - T)
     for sd in (Ls, Rs):   # alça vazada nas laterais
-        hd = box(40, 342, 140, 368).union(Point(40, 355).buffer(13, 16)).union(Point(140, 355).buffer(13, 16))
+        hd = box(27, 342, 153, 368)   # recorte retangular, cantos retos
         sd.poly = sd.poly.difference(hd)
     back = b.add(mk("Base fundo", X0 - E, X1 + E, 0, Hb, 0, T))
     lip = b.add(mk("Bandeja frente (logo)", X0 - E, X1 + E, 0, hl, D - T, D))
