@@ -4,15 +4,16 @@ from shapely import affinity
 from maletas import BUILDS, T
 SW, SH = 2750.0, 1840.0
 MARGIN, GAP = 15.0, 15.0
+COPIES = int(os.environ.get("COPIES", "1"))
 
 def nest(plates):
     prep = []
-    for p in plates:
+    for i, p in enumerate(plates):
         poly = p.poly
         minx, miny, maxx, maxy = poly.bounds
         if (maxy-miny) > (maxx-minx): poly = affinity.rotate(poly, 90, origin=(0, 0))
         minx, miny, maxx, maxy = poly.bounds
-        prep.append(dict(p=p, poly=affinity.translate(poly, -minx, -miny), w=maxx-minx, h=maxy-miny))
+        prep.append(dict(n=i // len(b.plates) + 1, p=p, poly=affinity.translate(poly, -minx, -miny), w=maxx-minx, h=maxy-miny))
     prep.sort(key=lambda d: (-d["h"], -d["w"]))
     sheets, shelves = [], []
     def place(i, d):
@@ -29,7 +30,8 @@ def nest(plates):
     return sheets
 
 b = [x for x in BUILDS if x.key == "B"][0]
-sheets = nest(b.plates)
+plates = [p for _ in range(COPIES) for p in b.plates]
+sheets = nest(plates)
 doc = ezdxf.new("R2010"); doc.units = ezdxf.units.MM
 for nm, col in (("CORTE_INTERNO", 5), ("CORTE_EXTERNO", 1), ("CHAPA_NAO_CORTAR", 8), ("ETIQUETAS_NAO_CORTAR", 8)):
     doc.layers.add(nm, color=col)
@@ -43,8 +45,8 @@ for si, sh in enumerate(sheets):
         for r in pl.interiors:
             msp.add_lwpolyline(list(r.coords), close=True, dxfattribs={"layer": "CORTE_INTERNO"})
         c = pl.representative_point()
-        msp.add_text(f'B {d["p"].name}', height=14, dxfattribs={"layer": "ETIQUETAS_NAO_CORTAR"}).set_placement((c.x, c.y))
-out = f"maletas/maleta_B_escada_chapa_2750x1840_{T:g}mm.dxf"
+        msp.add_text(f'B{d["n"]} {d["p"].name}' if COPIES > 1 else f'B {d["p"].name}', height=14, dxfattribs={"layer": "ETIQUETAS_NAO_CORTAR"}).set_placement((c.x, c.y))
+out = f"maletas/maleta_B_escada_chapa_2750x1840_{T:g}mm" + (f"_{COPIES}x" if COPIES > 1 else "") + ".dxf"
 doc.saveas(out)
-used = sum(p.poly.area for p in b.plates)
-print(out, "| chapas", len(sheets), "| pecas", len(b.plates), "| aproveitamento", round(100*used/(SW*SH*len(sheets))), "%")
+used = sum(p.poly.area for p in plates)
+print(out, "| chapas", len(sheets), "| pecas", len(plates), "| aproveitamento", round(100*used/(SW*SH*len(sheets))), "%")
