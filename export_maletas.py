@@ -126,7 +126,7 @@ for b in BUILDS:
                        peso=round(area*T/1000*740, 1), pecas=len([p for p in b.plates if p.kind != "wedge"]),
                        cunhas=b.nwedge, encaixes=b.nlap, chapas=len(sheets), aproveitamento=round(100*used/(SHEET[0]*SHEET[1]*len(sheets))),
                        bom=list(bom.values()), sheets=[svg(s) for s in sheets],
-                       fix=getattr(b, 'fix', {}), al=getattr(b, 'al', []), cant=getattr(b, 'nbr', 0), sarr=getattr(b, 'sarr', []))
+                       fix=getattr(b, 'fix', {}), al=getattr(b, 'al', []), cant=getattr(b, 'nbr', 0), sarr=getattr(b, 'sarr', []), lift=getattr(b, 'lift', 0))
     print(b.key, NAMES[b.key], "| pecas", data[b.key]["pecas"], "+", b.nwedge, "cunhas | area", round(area, 2), "m2 | peso",
           data[b.key]["peso"], "kg | chapas", len(sheets), "|", data[b.key]["aproveitamento"], "%")
 json.dump(data, open(OUT + f"maletas{TAG}.json", "w"))

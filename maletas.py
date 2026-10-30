@@ -319,6 +319,8 @@ def build_A():
             for dy, g in ((-34, None), (34, "mov")):
                 hcyl(b, (xc + dx, Hb + dy*0.75, -2.6), 3.0, 1.4, (0,0,1), m="screw", g=g)
     leather_handle(b, Hb + Hl - M, D/2, g="mov")
+    for x in (X0 + T + 40, X1 - T - 40):          # rodinhas (opcional): embaixo da base rebaixada
+        caster(b, x, T + 35, 1, y0=M); caster(b, x, D - T - 35, -1, brake=True, y0=M)
     b.closed = dict(L=W + 40, P=D + 20, A=Hb + Hl); b.opened = dict(L=W + 40, P=D + 80, A=Hb + D)
     b.kit = dict(cobertas=2, bandanas=2, gravatas=4, pelucias=2)
     return b
@@ -430,6 +432,8 @@ def build_B():
         for dx in (-26.0, 0.0, 26.0):
             hcyl(b, (xc + dx, ysf + 1.9, Dt - 13), 3.2, 1.2, (0,1,0), m="screw")
             hcyl(b, (xc + dx, Hb + MR - 1.9, Dt - 13), 3.2, 1.2, (0,1,0), m="screw", g="mov")
+    for x in (X0 + 38, X1 - 38):                  # rodinhas (opcional)
+        caster(b, x, 32.0, 1); caster(b, x, D - 32.0, -1, brake=True)
     b.closed = dict(L=W + 40, P=D + 40, A=Hb); b.opened = dict(L=W + 40, P=D + 40, A=Hb + L)
     b.kit = dict(cobertas=3, bandanas=6, gravatas=4, pelucias=4)
     return b
@@ -492,6 +496,8 @@ def build_C():
             for dy in (-18, 18):
                 hcyl(b, (W/2 + 2.4, yc + dy, D + dz), 3.0, 1.4, (1,0,0), m="screw", g=("mov" if dz > 0 else None))
     leather_handle(b, H - M, 165.0)
+    for x in (X0 + T + 40, X1 - T - 40):          # rodinhas (opcional), só no corpo
+        caster(b, x, T + 35, 1, y0=M); caster(b, x, D - T - 35, -1, brake=True, y0=M)
     b.closed = dict(L=W + 20, P=D + dd + 40, A=H); b.opened = dict(L=2*W + 40, P=D + 20, A=H)
     b.kit = dict(cobertas=3, bandanas=6, gravatas=4, pelucias=4)
     return b
@@ -532,11 +538,12 @@ def batten(b, lo, hi, attach, g=None, step=120.0, inset=20.0):
 
 CASTER_H = 72.0    # rodízio de 50 mm (2"): altura do topo da placa ao chão
 
-def caster(b, x, z, toward, brake=False):
+def caster(b, x, z, toward, brake=False, y0=0.0):
     """Rodízio giratório 50 mm de silicone com placa 60 x 45 (opcional: aparece só com 'Rodinhas' ligado).
     toward = sentido (±1 em z) para onde a roda fica deslocada do eixo de giro."""
-    def bx(c, s, m="metal"): b.hw.append(dict(k="box", c=list(map(float, c)), s=list(map(float, s)), U=(1,0,0), V=(0,1,0), W=(0,0,1), m=m, g=None, opt="rodas"))
-    def cy(c, r, l, a, m="metal"): b.hw.append(dict(k="cyl", c=list(map(float, c)), r=float(r), l=float(l), a=list(a), m=m, g=None, opt="rodas"))
+    b.lift = CASTER_H - y0
+    def bx(c, s, m="metal"): b.hw.append(dict(k="box", c=[float(c[0]), float(c[1]) + y0, float(c[2])], s=list(map(float, s)), U=(1,0,0), V=(0,1,0), W=(0,0,1), m=m, g=None, opt="rodas"))
+    def cy(c, r, l, a, m="metal"): b.hw.append(dict(k="cyl", c=[float(c[0]), float(c[1]) + y0, float(c[2])], r=float(r), l=float(l), a=list(a), m=m, g=None, opt="rodas"))
     bx((x, -1.25, z), (60, 2.5, 45))                                    # placa
     for dx in (-22, 22):
         for dz in (-15, 15):

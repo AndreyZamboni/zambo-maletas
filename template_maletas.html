@@ -255,7 +255,7 @@ const INFO = {
     tag: "Vitrine", sub: "kit de visita · 10 peças",
     desc: "Maleta tipo pasta, como a caixa laranja. A tampa abre a 100° e vira o painel com a marca, uma bandana de cada tamanho e uma gravata. Na base ficam os rolos de coberta, as gravatas num piso elevado e os ossos.",
     where: [[2,"Cobertas","deitadas em berços, mostrando o rolo"],[2,"Bandanas","G e P no varão da tampa"],[4,"Gravatas","1 na tampa e 3 em nichos elevados"],[2,"Pelúcias","osso P em cima do G"]],
-    hw: ["2 dobradiças metálicas de 50 mm na traseira (inox ou latão)", "1 limitador de tampa (compasso) para segurar a 100°", "2 fechos de mala na frente", "1 alça de couro no tampo, com 2 ponteiras metálicas", "Parafusos M3 × 12 com porca para todas as ferragens"],
+    hw: ["2 dobradiças metálicas de 50 mm na traseira (inox ou latão)", "1 limitador de tampa (compasso) para segurar a 100°", "2 fechos de mala na frente", "1 alça de couro no tampo, com 2 ponteiras metálicas", "Parafusos M3 × 12 com porca para todas as ferragens", "Opcional: 4 rodízios giratórios de 50 mm em silicone transparente, placa 60 × 45 mm (2 com freio, na frente), presos com parafusos M5, arruela larga e porca atravessando a base; cole por dentro um retalho de MDF de 10 × 10 cm em cima de cada roda para reforçar"],
     steps: ["Base: encaixe as linguetas do piso nos rasgos da frente e do fundo, com as duas em pé.",
       "Coloque as duas divisórias, os berços dos rolos e o piso elevado das gravatas. Tudo encaixa no piso, na frente e no fundo.",
       "Desça as laterais pelos rasgos de baixo sobre os rasgos dos cantos da frente e do fundo.",
@@ -266,7 +266,7 @@ const INFO = {
     tag: "Escada", sub: "seu esboço · 17 peças",
     desc: "A tampa gira 180° para trás e continua a rampa das laterais. Aberta, vira uma mini gôndola: bandanas G no alto da tampa e gravatas no meio dela, ossos e bandanas P na prateleira do meio e cobertas deitadas embaixo. Fechada, é uma caixa de 60 × 38 × 40 cm com alças vazadas.",
     where: [[3,"Bandanas G","topo da tampa, na altura do olho"],[4,"Gravatas","varão no meio da tampa"],[3,"Bandanas P","em leque, lado direito da prateleira"],[4,"Pelúcias","lado esquerdo da prateleira, P em cima do G"],[3,"Cobertas","deitadas embaixo, rolo virado para o cliente"]],
-    hw: ["2 dobradiças de chapa de 76 × 50 mm (3 furos por aba), uma em cada canto da emenda entre o tampo da alça e a tampa", "1 alça de couro no tampo da base, com 2 ponteiras metálicas (deita quando a tampa abre)", "2 fechos de pressão tipo maleta na frente, na emenda entre a tampa e a bandeja (travam a tampa para carregar)", "4 pés de borracha adesivos", "Parafusos M3 × 12 com porca"],
+    hw: ["2 dobradiças de chapa de 76 × 50 mm (3 furos por aba), uma em cada canto da emenda entre o tampo da alça e a tampa", "1 alça de couro no tampo da base, com 2 ponteiras metálicas (deita quando a tampa abre)", "2 fechos de pressão tipo maleta na frente, na emenda entre a tampa e a bandeja (travam a tampa para carregar)", "4 pés de borracha adesivos", "Parafusos M3 × 12 com porca", "Opcional: 4 rodízios giratórios de 50 mm em silicone transparente, placa 60 × 45 mm (2 com freio, na frente), presos com parafusos M5, arruela larga e porca atravessando a base; cole por dentro um retalho de MDF de 10 × 10 cm em cima de cada roda para reforçar"],
     steps: ["Só rasgo, sem nenhuma aba: cada peça tem um rasgo até a metade e entra no rasgo da outra, com 2 cm de ponta para fora.",
       "Com as duas laterais em pé, passe o piso por trás pelos rasgos de baixo. Desça o fundo nos rasgos dos cantos de trás: ele trava o piso.",
       "Passe o tampo da alça pela frente, nos rasgos do alto das laterais.",
@@ -292,7 +292,7 @@ const INFO = {
     tag: "Baú", sub: "abre como livro · 17 peças",
     desc: "Corpo com as cobertas em pé e os ossos na prateleira. A porta abre de lado e traz as bandanas e as gravatas penduradas em três varões, na altura do olho de quem está do outro lado do balcão.",
     where: [[3,"Cobertas","em pé no corpo, suporte em U"],[6,"Bandanas","G e P em varões na porta"],[4,"Gravatas","no varão de baixo da porta"],[4,"Pelúcias","em fila na prateleira"]],
-    hw: ["2 dobradiças metálicas de 64 mm na quina direita", "2 fechos de mala na quina esquerda", "1 alça de couro no tampo do corpo, com 2 ponteiras metálicas", "4 pés de borracha", "Parafusos M3 × 12 com porca"],
+    hw: ["2 dobradiças metálicas de 64 mm na quina direita", "2 fechos de mala na quina esquerda", "1 alça de couro no tampo do corpo, com 2 ponteiras metálicas", "4 pés de borracha", "Parafusos M3 × 12 com porca", "Opcional: 4 rodízios giratórios de 50 mm em silicone transparente, placa 60 × 45 mm (2 com freio, na frente), presos com parafusos M5, arruela larga e porca atravessando a base; cole por dentro um retalho de MDF de 10 × 10 cm em cima de cada roda para reforçar"],
     steps: ["Corpo: base, tampo, prateleira e suporte dos rolos encaixam nas duas laterais.",
       "Desça o fundo pelos rasgos dos cantos de trás. A frente baixa da prateleira encaixa por cima.",
       "Porta: base, tampo e os três varões nas laterais da porta. A frente da porta desce pelos rasgos.",
@@ -588,7 +588,7 @@ function build(k){
 function applyRodas(){
   const on = state.rodas && opts.length > 0;
   opts.forEach(o => o.visible = on);
-  if (root) root.position.y = on ? 72 : 0;
+  if (root) root.position.y = on ? (DATA[state.k].lift || 72) : 0;
   const b = document.getElementById("b-rodas");
   if (b){ b.hidden = opts.length === 0; b.setAttribute("aria-pressed", on); b.textContent = "Rodinhas: " + (on ? "on" : "off"); }
 }
