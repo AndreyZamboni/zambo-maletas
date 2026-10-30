@@ -530,6 +530,30 @@ def batten(b, lo, hi, attach, g=None, step=120.0, inset=20.0):
             b.fix["madeira"] = b.fix.get("madeira", 0) + 1
 
 
+CASTER_H = 72.0    # rodízio de 50 mm (2"): altura do topo da placa ao chão
+
+def caster(b, x, z, toward, brake=False):
+    """Rodízio giratório 50 mm de silicone com placa 60 x 45 (opcional: aparece só com 'Rodinhas' ligado).
+    toward = sentido (±1 em z) para onde a roda fica deslocada do eixo de giro."""
+    def bx(c, s, m="metal"): b.hw.append(dict(k="box", c=list(map(float, c)), s=list(map(float, s)), U=(1,0,0), V=(0,1,0), W=(0,0,1), m=m, g=None, opt="rodas"))
+    def cy(c, r, l, a, m="metal"): b.hw.append(dict(k="cyl", c=list(map(float, c)), r=float(r), l=float(l), a=list(a), m=m, g=None, opt="rodas"))
+    bx((x, -1.25, z), (60, 2.5, 45))                                    # placa
+    for dx in (-22, 22):
+        for dz in (-15, 15):
+            cy((x + dx, -2.8, z + dz), 3.6, 1.2, (0, 1, 0), m="screw")   # porcas dos 4 parafusos M5
+    cy((x, -6.5, z), 19, 7, (0, 1, 0))                                  # rolamento do giro
+    zw = z + toward*14; yw = -CASTER_H + 25
+    bx((x, -11.5, z + toward*6), (34, 4, 34))                           # topo do garfo
+    for dx in (-12.5, 12.5):
+        bx((x + dx, (yw - 11.5)/2 - 2, zw - toward*2), (2.5, -yw - 4, 24))   # pernas do garfo
+    cy((x, yw, zw), 25, 20, (1, 0, 0), m="clear")                       # roda de silicone transparente
+    cy((x, yw, zw), 9, 22, (1, 0, 0))                                   # cubo
+    cy((x, yw, zw), 4.5, 30, (1, 0, 0), m="screw")                      # eixo
+    if brake:
+        bx((x, yw + 22, zw - toward*30), (22, 10, 30), m="rubber")      # pedal do freio
+        bx((x, yw + 14, zw - toward*8), (18, 14, 14), m="rubber")
+
+
 def build_D():
     b = Build("D"); b.fix = {}; b.sarr = []; b.al = []; b.nbr = 0
     W, D, Hb, hl = 560.0, 340.0, 400.0, 60.0
@@ -635,6 +659,10 @@ def build_D():
         hbox(b, (xc, ysf2 + 0.8, Dt - HW/2), (HL, 1.6, HW))
         hbox(b, (xc, Hb + MR - 0.8, Dt - HW/2), (HL, 1.6, HW), g="mov")
         hcyl(b, (xc, Hb, Dt), 4.0, HL, (1,0,0))
+    # rodinhas (teste, opcional): traseiras sem freio, dianteiras com freio
+    for x in (X0 + 38, X1 - 38):
+        caster(b, x, 32.0, 1)
+        caster(b, x, D - 32.0, -1, brake=True)
     b.closed = dict(L=W, P=D, A=Hb); b.opened = dict(L=W, P=D, A=Hb + L)
     b.kit = dict(cobertas=3, bandanas=6, gravatas=4, pelucias=4)
     return b

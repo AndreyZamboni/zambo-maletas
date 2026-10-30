@@ -140,6 +140,7 @@ svg.sheet .cunha{fill:var(--brown)}
         <button class="btn primary" id="b-open">Fechar</button>
         <button class="btn" id="b-explode" aria-pressed="false">Vista explodida</button>
         <button class="btn" id="b-prod" aria-pressed="true">Produtos</button>
+        <button class="btn" id="b-rodas" aria-pressed="true" hidden>Rodinhas: on</button>
       </div>
       <div class="hint">arraste para girar · role ou pince para zoom</div>
     </div>
@@ -278,7 +279,7 @@ const INFO = {
     tag: "Escada parafusada", sub: "teste · 13 peças",
     desc: "A mesma Escada, montada com parafuso em vez de rasgo e sem cantoneira. As chapas são retas, sem rasgo e sem ponta para fora. Por dentro, sarrafos de pinus de 15 × 15 mm fazem as quinas e apoiam o tampo, a prateleira e o piso da tampa. Cada parafuso entra pela face da chapa e prende no sarrafo, porque o MDF de 6 ou 8 mm não segura parafuso pelo topo.",
     where: [[3,"Bandanas G","topo da tampa, na altura do olho"],[4,"Gravatas","varão no meio da tampa"],[3,"Bandanas P","em leque, lado direito da prateleira"],[4,"Pelúcias","lado esquerdo da prateleira, P em cima do G"],[3,"Cobertas","deitadas embaixo, rolo virado para o cliente"]],
-    hw: ["__SR__", "__PF__", "__PC__", "Cola branca para madeira (PVA) em todos os sarrafos", "2 dobradiças de chapa de 76 × 50 mm, 1 alça de couro e 2 fechos de pressão (iguais aos da Escada)", "4 pés de borracha adesivos"],
+    hw: ["__SR__", "__PF__", "__PC__", "Cola branca para madeira (PVA) em todos os sarrafos", "2 dobradiças de chapa de 76 × 50 mm, 1 alça de couro e 2 fechos de pressão (iguais aos da Escada)", "Teste: 4 rodízios giratórios de 50 mm em silicone transparente, placa 60 × 45 mm (2 com freio, na frente), presos com 16 parafusos M5 com arruela larga e porca, atravessando o piso (por dentro, um retalho de MDF de 10 × 10 cm colado embaixo de cada roda reforça o piso de 6 mm). A maleta fica 7 cm mais alta. Sem rodinhas: 4 pés de borracha adesivos."],
     steps: ["Os furos de 4 mm já saem no corte. Escareie um pouco por fora, para a cabeça do parafuso ficar rente.",
       "Corte os sarrafos de 15 × 15 mm nas medidas da lista. Cole e parafuse primeiro os sarrafos em cada lateral: o do pé, os das quinas e os de apoio do tampo e da prateleira.",
       "Deite o piso e coloque as duas laterais em pé sobre ele. Parafuse por baixo do piso nos sarrafos do pé.",
@@ -355,7 +356,7 @@ function renderInfo(k){
   document.getElementById("sheets").innerHTML = d.sheets.join("");
   document.getElementById("sheet-lede").textContent = `Maleta ${I.tag}: ${d.chapas} ${d.chapas > 1 ? "mesas" : "mesa"} de laser de 1300 × 900 mm, com ${d.aproveitamento}% de aproveitamento. As sobras dão para cortar as peças de teste.`;
 }
-var state = {k: "B", open: true, explode: false, prod: true, t: "6"};
+var state = {k: "B", open: true, explode: false, prod: true, rodas: true, t: "6"};
 var V3 = null;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -417,7 +418,9 @@ const HWM = {
   leather: new THREE.MeshStandardMaterial({color: 0x5b3220, roughness: .62, metalness: .05}),
   steel: new THREE.MeshStandardMaterial({color: 0x9aa1a8, metalness: .7, roughness: .4}),
   wood: new THREE.MeshStandardMaterial({color: 0xd9b27a, roughness: .8, metalness: 0}),
-  gold: new THREE.MeshStandardMaterial({color: 0xd4a937, metalness: .9, roughness: .28})
+  gold: new THREE.MeshStandardMaterial({color: 0xd4a937, metalness: .9, roughness: .28}),
+  clear: new THREE.MeshStandardMaterial({color: 0xe3ecef, transparent: true, opacity: .6, roughness: .12, metalness: .05}),
+  rubber: new THREE.MeshStandardMaterial({color: 0x1d1d1f, roughness: .7, metalness: .1})
 };
 const stitchTex = canvasTex(64, 256, (g, w, h) => {
   g.fillStyle = "#5b3220"; g.fillRect(0, 0, w, h);
@@ -513,12 +516,12 @@ function logoTex(name){
 }
 const v3 = a => new THREE.Vector3(a[0], a[1], a[2]);
 const geoCache = {};
-let root = null, mov = null, movInner = null, pivot = null, items = [], prods = [], flats = [];
+let root = null, mov = null, movInner = null, pivot = null, items = [], prods = [], flats = [], opts = [];
 
 function build(k){
   if (root) scene.remove(root);
   root = new THREE.Group(); scene.add(root);
-  const d = DATA[k]; pivot = d.pivot; items = []; prods = [];
+  const d = DATA[k]; pivot = d.pivot; items = []; prods = []; opts = [];
   mov = new THREE.Group(); mov.position.copy(v3(pivot.p));
   movInner = new THREE.Group(); movInner.position.copy(v3(pivot.p)).multiplyScalar(-1);
   mov.add(movInner); root.add(mov);
@@ -572,6 +575,7 @@ function build(k){
     }
     obj.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
     const holder = new THREE.Group(); holder.add(obj);
+    if (h.opt){ holder.visible = state.rodas; opts.push(holder); }
     (h.g ? movInner : root).add(holder);
     const c = h.k === "strap" ? v3(h.pts[12]) : v3(h.c);
     items.push({holder, c, g: h.g});
@@ -579,6 +583,14 @@ function build(k){
   const box = new THREE.Box3(); items.forEach(it => box.expandByPoint(it.c));
   const ctr = box.getCenter(new THREE.Vector3());
   items.forEach(it => it.dir = it.c.clone().sub(ctr));
+  applyRodas();
+}
+function applyRodas(){
+  const on = state.rodas && opts.length > 0;
+  opts.forEach(o => o.visible = on);
+  if (root) root.position.y = on ? 72 : 0;
+  const b = document.getElementById("b-rodas");
+  if (b){ b.hidden = opts.length === 0; b.setAttribute("aria-pressed", on); b.textContent = "Rodinhas: " + (on ? "on" : "off"); }
 }
 function frame(k){
   const d = DATA[k], A = d.aberta;
@@ -615,6 +627,7 @@ new ResizeObserver(resize).observe(stage);
 V3 = {
   show(k){ build(k); cur = rad(state.open ? pivot.open : pivot.closed); frame(k); },
   setProd(v){ prods.forEach(m => m.visible = v); },
+  setRodas(){ applyRodas(); },
   refresh(){ build(state.k); }
 };
 resize(); tick();
@@ -637,6 +650,7 @@ document.getElementById("t-8").onclick = () => setT("8");
 document.getElementById("b-open").onclick = () => { state.open = !state.open; openLabel(); };
 document.getElementById("b-explode").onclick = () => { state.explode = !state.explode; press("b-explode", state.explode); };
 document.getElementById("b-prod").onclick = () => { state.prod = !state.prod; press("b-prod", state.prod); if (V3) V3.setProd(state.prod); };
+document.getElementById("b-rodas").onclick = () => { state.rodas = !state.rodas; if (V3) V3.setRodas(); };
 if (!V3){
   const st = document.getElementById("stage");
   st.querySelector(".ctrls").hidden = true; st.querySelector(".hint").hidden = true;
