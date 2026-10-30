@@ -276,15 +276,15 @@ const INFO = {
   },
   D: {
     tag: "Escada parafusada", sub: "teste · 13 peças",
-    desc: "A mesma Escada, montada com parafuso em vez de rasgo. As chapas são retas, sem rasgo e sem ponta para fora. As quinas de fora levam cantoneira de alumínio, e o tampo, a prateleira e o piso da tampa ficam presos em cantoneiras L por dentro. Tudo com parafuso M4 e porca atravessando a chapa, porque o MDF de 6 ou 8 mm não segura parafuso pelo topo.",
+    desc: "A mesma Escada, montada com parafuso em vez de rasgo e sem cantoneira. As chapas são retas, sem rasgo e sem ponta para fora. Por dentro, sarrafos de pinus de 15 × 15 mm fazem as quinas e apoiam o tampo, a prateleira e o piso da tampa. Cada parafuso entra pela face da chapa e prende no sarrafo, porque o MDF de 6 ou 8 mm não segura parafuso pelo topo.",
     where: [[3,"Bandanas G","topo da tampa, na altura do olho"],[4,"Gravatas","varão no meio da tampa"],[3,"Bandanas P","em leque, lado direito da prateleira"],[4,"Pelúcias","lado esquerdo da prateleira, P em cima do G"],[3,"Cobertas","deitadas embaixo, rolo virado para o cliente"]],
-    hw: ["__AL__", "__BR__", "__M4__", "4 parafusos M4 × 30 com espaçador de 8 mm e porca cega (prendem os varões no painel da tampa)", "2 dobradiças de chapa de 76 × 50 mm, 1 alça de couro e 2 fechos de pressão (iguais aos da Escada)", "4 pés de borracha adesivos"],
-    steps: ["Os furos de 4,5 mm já saem no corte. Antes de montar, corte as cantoneiras de alumínio nas medidas da lista e fure usando a peça de MDF como gabarito.",
-      "Deite o piso. Em pé sobre ele, coloque as duas laterais, o fundo e a frente da bandeja. Prenda as quinas de trás e da frente com as cantoneiras de alumínio verticais.",
-      "Feche o contorno de baixo com as 4 cantoneiras do piso, parafusando na lateral, no fundo ou na frente e por baixo do piso.",
-      "Parafuse as cantoneiras L por dentro das laterais e apoie nelas o tampo da alça e a prateleira do meio. Prenda com parafuso por cima.",
-      "Tampa: painel entre as duas laterais triangulares, com cantoneira de alumínio nas duas quinas. O piso da tampa vai em cantoneiras L.",
-      "Varões: um parafuso M4 × 30 em cada ponta, entrando por trás do painel, com espaçador de 8 mm e porca cega na frente.",
+    hw: ["__SR__", "__PF__", "__PC__", "Cola branca para madeira (PVA) em todos os sarrafos", "2 dobradiças de chapa de 76 × 50 mm, 1 alça de couro e 2 fechos de pressão (iguais aos da Escada)", "4 pés de borracha adesivos"],
+    steps: ["Os furos de 4 mm já saem no corte. Escareie um pouco por fora, para a cabeça do parafuso ficar rente.",
+      "Corte os sarrafos de 15 × 15 mm nas medidas da lista. Cole e parafuse primeiro os sarrafos em cada lateral: o do pé, os das quinas e os de apoio do tampo e da prateleira.",
+      "Deite o piso e coloque as duas laterais em pé sobre ele. Parafuse por baixo do piso nos sarrafos do pé.",
+      "Encaixe o fundo e a frente da bandeja entre as laterais e parafuse nos sarrafos das quinas.",
+      "Apoie a prateleira e o tampo da alça nos sarrafos e parafuse por cima. O sarrafo do fundo segura a parte de trás do tampo.",
+      "Tampa: sarrafos nas laterais triangulares; painel e piso da tampa parafusados neles. Os varões são colados no painel e presos com 3 parafusos curtos cada, entrando por trás.",
       "Por último, as dobradiças nos cantos da emenda do tampo, a alça de couro e os fechos."]
   },
   C: {
@@ -309,7 +309,7 @@ function renderCmp(){
     ["Aberta no balcão", k => dims(DATA[k].aberta)],
     ["Peso do MDF", k => `${DATA[k].peso.toLocaleString("pt-BR")} kg`],
     ["Kit", k => `${Object.values(DATA[k].kit).reduce((a,b)=>a+b,0)} peças`],
-    ["Peças de MDF", k => `${DATA[k].pecas} (${DATA[k].fix && DATA[k].fix.m4x12 ? (DATA[k].fix.m4x12 + DATA[k].fix.m4x30) + " parafusos" : DATA[k].encaixes + " encaixes de rasgo"})`],
+    ["Peças de MDF", k => `${DATA[k].pecas} (${DATA[k].fix && DATA[k].fix.madeira ? (DATA[k].fix.madeira + (DATA[k].fix.curto||0)) + " parafusos" : DATA[k].encaixes + " encaixes de rasgo"})`],
     ["Chapas 1300 × 900", k => DATA[k].chapas],
     ["Melhor para", k => ({A:"Primeira visita e prospecção. Cabe embaixo do braço.", B:"Apresentação completa. Ocupa o mesmo espaço aberta ou fechada.", C:"Impacto na abertura. Bandanas na altura do olho."})[k]],
     ["Ponto de atenção", k => ({A:"Leva só 2 das 6 bandanas e 2 das 4 pelúcias.", B:"É compacta: as bandanas G se sobrepõem um pouco no varão de 55 cm.", C:"Aberta ocupa 1,12 m de balcão."})[k]],
@@ -340,15 +340,16 @@ function renderInfo(k){
       <dt>Aberta</dt><dd>${dims(d.aberta)}</dd>
       <dt>Peso do MDF</dt><dd>${d.peso.toLocaleString("pt-BR")} kg</dd>
       <dt>Peças de MDF</dt><dd>${d.pecas}</dd>
-      ${d.fix && d.fix.m4x12 ? `<dt>Parafusos M4</dt><dd>${d.fix.m4x12 + d.fix.m4x30}</dd><dt>Cantoneiras</dt><dd>${d.al.length} de alumínio + ${d.cant} L</dd>` : `<dt>Encaixes de rasgo</dt><dd>${d.encaixes}</dd>`}
+      ${d.fix && d.fix.madeira ? `<dt>Parafusos</dt><dd>${d.fix.madeira + (d.fix.curto||0)}</dd><dt>Sarrafos 15 × 15</dt><dd>${d.sarr.length} pedaços</dd>` : `<dt>Encaixes de rasgo</dt><dd>${d.encaixes}</dd>`}
       <dt>Chapas 1300 × 900</dt><dd>${d.chapas}</dd>
     </dl>
     <div><h3 style="margin-bottom:8px">Onde fica cada produto</h3>
     <ul class="where">${I.where.map(w => `<li><span class="qty">${w[0]}×</span><span><b>${w[1]}</b> · ${w[2]}</span></li>`).join("")}</ul></div>`;
   document.getElementById("h-bom").textContent = `Lista de peças · Maleta ${I.tag}`;
   document.getElementById("bom").innerHTML = d.bom.map(b => `<tr><td>${b.peca}</td><td class="n">${b.qtd}</td><td class="n">${b.dim}</td></tr>`).join("");
-  const alTxt = () => { const c = {}; d.al.forEach(v => c[v] = (c[v]||0) + 1); return `Cantoneira de alumínio 25 × 25 × 1,5 mm, ${(d.al.reduce((a,b)=>a+b,0)/1000).toLocaleString("pt-BR",{maximumFractionDigits:1})} m no total, em ${d.al.length} pedaços: ` + Object.entries(c).sort((a,b)=>b[0]-a[0]).map(([v,n]) => `${n} × ${v} mm`).join(", "); };
-  const hwRep = h => h === "__AL__" ? alTxt() : h === "__BR__" ? `${d.cant} cantoneiras L de aço zincado 20 × 20 mm (largura 15 mm), por dentro` : h === "__M4__" ? `${d.fix.m4x12} parafusos M4 × 12 cabeça panela, com arruela e porca` : h;
+  const srTxt = () => { const c = {}; (d.sarr||[]).forEach(v => c[v] = (c[v]||0) + 1); return `Sarrafo de pinus 15 × 15 mm, ${((d.sarr||[]).reduce((a,b)=>a+b,0)/1000).toLocaleString("pt-BR",{maximumFractionDigits:1})} m no total, em ${(d.sarr||[]).length} pedaços: ` + Object.entries(c).sort((a,b)=>b[0]-a[0]).map(([v,n]) => `${n} × ${v} mm`).join(", "); };
+  const scr = d.T > 6 ? "3,5 × 25" : "3,5 × 20";
+  const hwRep = h => h === "__SR__" ? srTxt() : h === "__PF__" ? `${d.fix.madeira} parafusos para madeira ${scr} mm, cabeça chata (atravessam a chapa e prendem no sarrafo)` : h === "__PC__" ? `${d.fix.curto} parafusos ${d.T > 6 ? "3,5 × 12" : "3,5 × 10"} mm, cabeça chata, para os varões (por trás do painel)` : h;
   document.getElementById("hw").innerHTML = I.hw.map(h => `<li>${hwRep(h)}</li>`).join("");
   document.getElementById("steps").innerHTML = I.steps.map(s => `<li>${s}</li>`).join("");
   document.getElementById("sheets").innerHTML = d.sheets.join("");
@@ -414,7 +415,8 @@ const HWM = {
   metal: new THREE.MeshStandardMaterial({color: 0xc9ccd0, metalness: .85, roughness: .32}),
   screw: new THREE.MeshStandardMaterial({color: 0x8d9196, metalness: .8, roughness: .45}),
   leather: new THREE.MeshStandardMaterial({color: 0x5b3220, roughness: .62, metalness: .05}),
-  steel: new THREE.MeshStandardMaterial({color: 0x9aa1a8, metalness: .7, roughness: .4})
+  steel: new THREE.MeshStandardMaterial({color: 0x9aa1a8, metalness: .7, roughness: .4}),
+  wood: new THREE.MeshStandardMaterial({color: 0xd9b27a, roughness: .8, metalness: 0})
 };
 const stitchTex = canvasTex(64, 256, (g, w, h) => {
   g.fillStyle = "#5b3220"; g.fillRect(0, 0, w, h);

@@ -498,98 +498,75 @@ def build_C():
 
 
 # =====================================================================================
-# D — MALETA ESCADA PARAFUSADA (teste): mesma maleta B, sem rasgo e sem ponta para fora.
-# Chapas retas de topo, unidas por cantoneira de alumínio 20 x 20 por fora (quinas) e
-# cantoneira L de aço 20 x 20 por dentro (tampo, prateleira e piso da tampa). Tudo com
-# parafuso M4 + porca, atravessando a chapa (MDF de 6/8 mm não segura parafuso no topo).
+# D — MALETA ESCADA PARAFUSADA (teste): mesma maleta B, sem rasgo e sem cantoneira.
+# Chapas retas de topo, unidas por sarrafos de pinus 15 x 15 mm colados/parafusados por dentro.
+# O parafuso atravessa a chapa (furo de 4 mm já no corte) e morde o sarrafo — MDF de 6/8 mm
+# não segura parafuso pelo topo, então todo parafuso entra pela face.
 # =====================================================================================
-AL_W, AL_T, AL_S = 25.0, 1.5, 16.0   # cantoneira de alumínio 25 x 25 externa; parafuso a 16 mm da quina
-BR_W, BR_L, BR_T = 20.0, 15.0, 2.0   # cantoneira L interna (abas 20 mm, largura 15 mm)
-HOLE_D = 4.5                   # furo para parafuso M4
+SR = 15.0          # sarrafo 15 x 15
+HOLE_D = 4.0       # furo de passagem p/ parafuso 3,5 mm
 
 def _drill(p, pt, d=HOLE_D):
-    hole = Point(p.loc(pt)).buffer(d/2, 16)
-    p.poly = p.poly.difference(hole)
+    p.poly = p.poly.difference(Point(p.loc(pt)).buffer(d/2, 16))
 
-def _bolt(b, plate, pt, n, g=None, kind="m4x12"):
-    """parafuso passante: cabeça na face do lado 'n', furo na chapa"""
-    _drill(plate, pt)
-    hcyl(b, pt, 4.0, 1.6, n, m="screw", g=g)
-    b.fix[kind] = b.fix.get(kind, 0) + 1
-
-def _abox(b, lo, hi, g=None, m="metal"):
+def batten(b, lo, hi, attach, g=None, step=120.0, inset=20.0):
+    """sarrafo (caixa lo..hi) parafusado nas chapas de 'attach' = [(chapa, eixo, lado)];
+    eixo = eixo da espessura da chapa; lado = +1 se a chapa fica do lado + do sarrafo."""
     lo, hi = np.array(lo, float), np.array(hi, float)
-    hbox(b, (lo + hi)/2, hi - lo, m=m, g=g)
-
-def al_angle(b, ax, a0, a1, corner, d1, d2, p1, p2, g=None, step=130.0, inset=25.0):
-    """Perfil L de alumínio na quina externa. corner = ponto da aresta; d1/d2 = direções (ao longo das faces,
-    para dentro das chapas p1/p2). A aba 1 deita sobre a face de p1 (normal -d2), a aba 2 sobre a de p2 (normal -d1)."""
-    k = AX[ax]; c = np.array(corner, float); d1 = np.array(d1, float); d2 = np.array(d2, float)
-    for (da, db, pl) in ((d1, d2, p1), (d2, d1, p2)):
-        pts = [c + da*u + db*v for u in (-AL_T, AL_W) for v in (-AL_T, 0.0)]
-        lo, hi = np.min(pts, axis=0), np.max(pts, axis=0)
-        lo[k], hi[k] = a0, a1
-        _abox(b, lo, hi, g)
-        L = a1 - a0; n = max(2, int(round(L/step)) + 1) if L > 70 else 1
-        for i in range(n):
-            t = a0 + (L*(i + 0.5)/n if n == 1 else inset + (L - 2*inset)*i/(n - 1)) if L > 70 else (a0 + a1)/2
-            pt = c + da*AL_S; pt[k] = t
-            _bolt(b, pl, pt + db*1e-3, tuple(-db), g)
-    b.al.append(round(a1 - a0))
-
-def br_angle(b, wall, panel, w_face, sw, y_face, sy, c, wax="x", g=None):
-    """Cantoneira L interna: aba vertical na face da parede (coordenada w_face no eixo wax, sw = sentido para dentro),
-    aba horizontal na face do painel (y_face, sy = sentido para longe do painel); c = posição ao longo da parede."""
-    i = AX[wax]; j = 2 if wax == "x" else 0
-    def bx(wa, wb, ya, yb):
-        lo, hi = np.zeros(3), np.zeros(3)
-        lo[i], hi[i] = min(wa, wb), max(wa, wb); lo[1], hi[1] = min(ya, yb), max(ya, yb)
-        lo[j], hi[j] = c - BR_L/2, c + BR_L/2
-        _abox(b, lo, hi, g, m="steel")
-    bx(w_face, w_face + sw*BR_T, y_face, y_face + sy*BR_W)
-    bx(w_face, w_face + sw*BR_W, y_face, y_face + sy*BR_T)
-    p1 = np.zeros(3); p1[i] = w_face - sw*T + sw*1e-3; p1[1] = y_face + sy*BR_W*0.6; p1[j] = c
-    n1 = np.zeros(3); n1[i] = -sw
-    _bolt(b, wall, tuple(p1), tuple(n1), g)                     # cabeça por fora da parede
-    p2 = np.zeros(3); p2[i] = w_face + sw*BR_W*0.6; p2[1] = y_face - sy*T + sy*1e-3; p2[j] = c
-    _bolt(b, panel, tuple(p2), (0, -sy, 0), g)                  # cabeça na outra face do painel
-    b.nbr += 1
+    hbox(b, (lo + hi)/2, hi - lo, m="wood", g=g)
+    k = int(np.argmax(hi - lo)); L = hi[k] - lo[k]
+    b.sarr.append(round(L))
+    n = 1 if L < 2*inset + 10 else max(2, int(math.ceil((L - 2*inset)/step)) + 1)
+    for (pl, ax, sd) in attach:
+        i = AX[ax]
+        for m_ in range(n):
+            t = (lo[k] + hi[k])/2 if n == 1 else lo[k] + inset + (L - 2*inset)*m_/(n - 1)
+            pt = (lo + hi)/2; pt[k] = t
+            face = pl.hi[i] if sd > 0 else pl.lo[i]      # face externa da chapa
+            pt[i] = face - sd*1e-3
+            _drill(pl, pt)
+            nv = [0, 0, 0]; nv[i] = sd
+            hcyl(b, tuple(pt), 3.6, 1.2, tuple(nv), m="screw", g=g)
+            b.fix["madeira"] = b.fix.get("madeira", 0) + 1
 
 
 def build_D():
-    b = Build("D"); b.fix = {}; b.al = []; b.nbr = 0
+    b = Build("D"); b.fix = {}; b.sarr = []; b.al = []; b.nbr = 0
     W, D, Hb, hl = 560.0, 340.0, 400.0, 60.0
     Dt = D/2; L = Hb - hl; X0, X1 = -W/2, W/2
     xi0, xi1 = X0 + T, X1 - T
     MR = 12.0
     # ---------------- base ----------------
-    bo = b.add(mk("Base piso", X0, X1, 0, T, 0, D))                      # piso por baixo de tudo
+    bo = b.add(mk("Base piso", X0, X1, 0, T, 0, D))
     def side(name, x0):
         p = Plate(name, Polygon([(0, T), (D, T), (D, hl), (Dt, Hb), (0, Hb)]), (x0, 0, 0), (0,0,1), (0,1,0), (1,0,0))
         p.lo, p.hi = np.array([x0, T, 0]), np.array([x0 + T, Hb, D])
         return b.add(p)
     Ls, Rs = side("Base lateral esq.", X0), side("Base lateral dir.", X1 - T)
     for sd in (Ls, Rs):
-        sd.poly = sd.poly.difference(box(27, 342, 153, 368))             # alça vazada retangular
+        sd.poly = sd.poly.difference(box(27, 342, 153, 368))
     back = b.add(mk("Base fundo", xi0, xi1, T, Hb, 0, T))
     lip = b.add(mk("Bandeja frente", xi0, xi1, T, hl, D - T, D))
-    top = b.add(mk("Base tampo (alça)", xi0, xi1, Hb - MR - T, Hb - MR, T, Dt))
+    ytop = Hb - MR - T
+    top = b.add(mk("Base tampo (alça)", xi0, xi1, ytop, Hb - MR, T, Dt))
     ysh = 180.0
     zsf = D - (ysh + T/2 - hl)/(L/Dt) - 3
     shelf = b.add(mk("Prateleira do meio (ossos e bandanas P)", xi0, xi1, ysh, ysh + T, T, zsf))
-    # quinas externas: 2 verticais atrás, 2 verticais na frente (bandeja), 4 no contorno do piso
-    for x, sx, sd in ((X0, 1, Ls), (X1, -1, Rs)):
-        al_angle(b, "y", AL_W, Hb, (x, 0, 0), (0,0,1), (sx,0,0), sd, back)          # lateral x fundo
-        al_angle(b, "y", AL_W, hl, (x, 0, D), (0,0,-1), (sx,0,0), sd, lip)          # lateral x bandeja
-        al_angle(b, "z", 0, D, (x, 0, 0), (0,1,0), (sx,0,0), sd, bo)                # lateral x piso
-    al_angle(b, "x", X0, X1, (0, 0, 0), (0,1,0), (0,0,1), back, bo, inset=45)                 # fundo x piso
-    al_angle(b, "x", X0, X1, (0, 0, D), (0,1,0), (0,0,-1), lip, bo, inset=45)                 # bandeja x piso
-    # cantoneiras internas
-    for xw, sx, sd in ((xi0, 1, Ls), (xi1, -1, Rs)):
-        br_angle(b, sd, top, xw, sx, Hb - MR - T, -1, Dt - BR_L/2 - 1)              # tampo: na lateral, à frente da alça vazada
-        br_angle(b, back, top, T, 1, Hb - MR - T, -1, xw + sx*60, wax="z")          # tampo: no fundo
-        for z in (T + 40, zsf - 30):
-            br_angle(b, sd, shelf, xw, sx, ysh, -1, z)                               # embaixo da prateleira
+    for sd, x0, sx in ((Ls, xi0, 1), (Rs, xi1 - SR, -1)):
+        side_at = (sd, "x", -sx)                      # lateral fica do lado -sx do sarrafo
+        x1 = x0 + SR
+        # pé: sarrafo no piso, ao longo da lateral (piso embaixo)
+        batten(b, (x0, T, T + SR), (x1, T + SR, D - T), [side_at, (bo, "y", -1)])
+        # quina de trás, vertical (lateral + fundo)
+        batten(b, (x0, T + SR, T), (x1, ysh, T + SR), [side_at, (back, "z", -1)])
+        batten(b, (x0, ysh + T, T), (x1, ytop - SR, T + SR), [side_at, (back, "z", -1)])
+        # quina da frente, toquinho na bandeja (abaixo da curva do rolo)
+        batten(b, (x0, T + SR, D - T - SR), (x1, T + SR + 22, D - T), [side_at, (lip, "z", 1)])
+        # apoio do tampo da alça (acima da alça vazada) e da prateleira
+        batten(b, (x0, ytop - SR, T + SR), (x1, ytop, Dt), [side_at, (top, "y", 1)])
+        batten(b, (x0, ysh - SR, T + SR), (x1, ysh, zsf), [side_at, (shelf, "y", 1)])
+    # fundo x tampo da alça
+    batten(b, (xi0 + SR, ytop - SR, T), (xi1 - SR, ytop, T + SR), [(back, "z", -1), (top, "y", 1)])
     # ---------------- tampa (posição ABERTA) ----------------
     def tri(name, x0):
         p = Plate(name, Polygon([(0, 0), (Dt, 0), (0, L)]), (x0, Hb, 0), (0,0,1), (0,1,0), (1,0,0), "mov")
@@ -597,28 +574,32 @@ def build_D():
         return b.add(p)
     tL, tR = tri("Tampa lateral esq.", X0), tri("Tampa lateral dir.", X1 - T)
     par = b.add(mk("Tampa painel", xi0, xi1, Hb, Hb + L, 0, T, "mov"))
-    piso = b.add(mk("Tampa piso", xi0, xi1, Hb + MR, Hb + MR + T, T, Dt, "mov"))
-    for x, sx, sd in ((X0, 1, tL), (X1, -1, tR)):
-        al_angle(b, "y", Hb + AL_W, Hb + L*(1 - (AL_W + 4)/Dt), (x, 0, 0), (0,0,1), (sx,0,0), sd, par, g="mov")
-        for z in (T + 30, Dt - 30):
-            br_angle(b, sd, piso, (xi0 if sx > 0 else xi1), sx, Hb + MR + T, 1, z, g="mov")   # em cima do piso da tampa
+    ypf = Hb + MR + T
+    piso = b.add(mk("Tampa piso", xi0, xi1, Hb + MR, ypf, T, Dt, "mov"))
+    ytip = min(Hb + L*(1 - (T + SR + 4)/Dt), 2*Hb - 135)    # largura p/ o sarrafo e, fechada, acima dos rolos
+    for sd, x0, sx in ((tL, xi0, 1), (tR, xi1 - SR, -1)):
+        side_at = (sd, "x", -sx); x1 = x0 + SR
+        batten(b, (x0, ypf, T + SR), (x1, ypf + SR, Dt - 28), [side_at, (piso, "y", -1)], g="mov")
+        batten(b, (x0, ypf, T), (x1, ytip, T + SR), [side_at, (par, "z", -1)], g="mov")
+    batten(b, (xi0 + SR, ypf, T), (xi1 - SR, ypf + SR, T + SR), [(par, "z", -1), (piso, "y", -1)], g="mov")
+    # varões: tira de MDF colada no painel, entre os sarrafos, parafusada por trás do painel
     rails = {}
     yGt = Hb + L - 42.0; yGb = yGt - BG["h"]; ygt = (yGb + (Hb + MR + T)) / 2 + GR["h"]/2
+    zr0 = T
     for nm, y0 in (("Varão bandanas G", yGt - 30), ("Varão gravatas", ygt - 30)):
-        r = b.add(mk(nm, xi0, xi1, y0, y0 + 30, 14, 14 + T, "mov"))
+        r = b.add(mk(nm, xi0 + SR, xi1 - SR, y0, y0 + 30, zr0, zr0 + T, "mov"))
         rails[nm] = y0 + 30
-        for x in (xi0 + 12, xi1 - 12):                     # parafuso M4 x 30 por trás + espaçador 8 mm + porca cega
-            _drill(par, (x, y0 + 15, 0)); _drill(r, (x, y0 + 15, 14))
-            hcyl(b, (x, y0 + 15, -0.8), 4.0, 1.6, (0,0,1), m="screw", g="mov")
-            hcyl(b, (x, y0 + 15, (T + 14)/2), 4.0, 14 - T, (0,0,1), m="metal", g="mov")
-            b.fix["m4x30"] = b.fix.get("m4x30", 0) + 1
-    # ---------- produtos (iguais à B) ----------
+        for x in (xi0 + SR + 30, 0.0, xi1 - SR - 30):
+            pt = (x, y0 + 15, 1e-3); _drill(par, pt, 3.0)
+            hcyl(b, (x, y0 + 15, -0.6), 3.6, 1.2, (0, 0, 1), m="screw", g="mov")
+            b.fix["curto"] = b.fix.get("curto", 0) + 1
+    # ---------- produtos ----------
     fl = T
-    rx = [xi0 + 3 + COB["D"]/2 + k*(COB["D"] + 6) for k in range(3)]; zr = T + COB["L"]/2
+    rx = [xi0 + 3 + COB["D"]/2 + k*(COB["D"] + 6) for k in range(3)]; zr = T + SR + 1 + COB["L"]/2
     for k, x in enumerate(rx):
         b.prod("coberta", (x, fl + COB["D"]/2, zr), (COB["L"], COB["D"], COB["D"]), **ROLL_Z, col=COB_COLS[k])
-    zo = T + PG["L"]/2 + 2; ysf = ysh + T
-    bx = [xi0 + 3 + PG["w"]/2 + BR_W, xi0 + 3 + PG["w"]*1.5 + 5 + BR_W]
+    zo = T + SR + PG["L"]/2 + 2; ysf = ysh + T
+    bx = [xi0 + 3 + PG["w"]/2, xi0 + 3 + PG["w"]*1.5 + 5]
     for x, c1, c2 in ((bx[0], "navy", "sage"), (bx[1], "sage", "navy")):
         b.prod("osso", (x, ysf + PG["t"]/2, zo), (PG["L"], PG["w"], PG["t"]), **FLAT_Z, col=c1)
         b.prod("osso", (x, ysf + PG["t"] + PP["t"]/2, zo + 30), (PP["L"], PP["w"], PP["t"]), **FLAT_Z, col=c2)
@@ -626,12 +607,13 @@ def build_D():
     for k in range(3):
         b.prod("bandana", (xs + BP["w"]/2 + k*stp, ysf + 4 + k*1.2, (T + zsf)/2 + 10 - k*12), (BP["w"], BP["h"], 6),
                U=(1,0,0), V=(0,0,-1), W=(0,1,0), pat=BAND_PATS[k])
+    zp = zr0 + T + 5
     yG = rails["Varão bandanas G"]
-    for k, x in enumerate((-(xi1 - 122), 0.0, xi1 - 122)):
-        b.prod("bandana", (x, yG - BG["h"]/2, 25 + k*1.2), (BG["w"], BG["h"], 6), g="mov", pat=BAND_PATS[k])
+    for k, x in enumerate((-(xi1 - SR - 124), 0.0, xi1 - SR - 124)):
+        b.prod("bandana", (x, yG - BG["h"]/2, zp + 3 + k*1.2), (BG["w"], BG["h"], 6), g="mov", pat=BAND_PATS[k])
     yg = rails["Varão gravatas"]
     for k, x in enumerate((-195.0, -65.0, 65.0, 195.0)):
-        b.prod("gravata", (x, yg - GR["h"]/2, 22 + GR["t"]/2 + 1), (GR["w"], GR["h"], GR["t"]), g="mov",
+        b.prod("gravata", (x, yg - GR["h"]/2, zp + GR["t"]/2), (GR["w"], GR["h"], GR["t"]), g="mov",
                pat=["ladybug", "polka_teal", "ladybug", "polka_teal"][k])
     b.pivot = dict(axis="x", p=[0, Hb, Dt], open=0, closed=180)
     leather_handle(b, Hb - MR, 95.0, flat=True)
@@ -647,10 +629,9 @@ def build_D():
         hbox(b, (xc, ysf2 + 0.8, Dt - HW/2), (HL, 1.6, HW))
         hbox(b, (xc, Hb + MR - 0.8, Dt - HW/2), (HL, 1.6, HW), g="mov")
         hcyl(b, (xc, Hb, Dt), 4.0, HL, (1,0,0))
-    b.closed = dict(L=W + 2*AL_T, P=D + 2*AL_T, A=Hb + AL_T); b.opened = dict(L=W + 2*AL_T, P=D + 2*AL_T, A=Hb + L)
+    b.closed = dict(L=W, P=D, A=Hb); b.opened = dict(L=W, P=D, A=Hb + L)
     b.kit = dict(cobertas=3, bandanas=6, gravatas=4, pelucias=4)
     return b
-
 
 BUILDS = [build_A(), build_B(), build_C(), build_D()]
 for bld in BUILDS:
