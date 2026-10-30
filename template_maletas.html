@@ -349,7 +349,7 @@ function renderInfo(k){
   document.getElementById("bom").innerHTML = d.bom.map(b => `<tr><td>${b.peca}</td><td class="n">${b.qtd}</td><td class="n">${b.dim}</td></tr>`).join("");
   const srTxt = () => { const c = {}; (d.sarr||[]).forEach(v => c[v] = (c[v]||0) + 1); return `Sarrafo de pinus 15 × 15 mm, ${((d.sarr||[]).reduce((a,b)=>a+b,0)/1000).toLocaleString("pt-BR",{maximumFractionDigits:1})} m no total, em ${(d.sarr||[]).length} pedaços: ` + Object.entries(c).sort((a,b)=>b[0]-a[0]).map(([v,n]) => `${n} × ${v} mm`).join(", "); };
   const scr = d.T > 6 ? "3,5 × 25" : "3,5 × 20";
-  const hwRep = h => h === "__SR__" ? srTxt() : h === "__PF__" ? `${d.fix.madeira} parafusos para madeira ${scr} mm, cabeça chata (atravessam a chapa e prendem no sarrafo)` : h === "__PC__" ? `${d.fix.curto} parafusos ${d.T > 6 ? "3,5 × 12" : "3,5 × 10"} mm, cabeça chata, para os varões (por trás do painel)` : h;
+  const hwRep = h => h === "__SR__" ? srTxt() : h === "__PF__" ? `${d.fix.madeira} parafusos para madeira ${scr} mm, cabeça chata, dourados (bicromatizados ou latonados) (atravessam a chapa e prendem no sarrafo)` : h === "__PC__" ? `${d.fix.curto} parafusos ${d.T > 6 ? "3,5 × 12" : "3,5 × 10"} mm, cabeça chata, dourados, para os varões (por trás do painel)` : h;
   document.getElementById("hw").innerHTML = I.hw.map(h => `<li>${hwRep(h)}</li>`).join("");
   document.getElementById("steps").innerHTML = I.steps.map(s => `<li>${s}</li>`).join("");
   document.getElementById("sheets").innerHTML = d.sheets.join("");
@@ -416,7 +416,8 @@ const HWM = {
   screw: new THREE.MeshStandardMaterial({color: 0x8d9196, metalness: .8, roughness: .45}),
   leather: new THREE.MeshStandardMaterial({color: 0x5b3220, roughness: .62, metalness: .05}),
   steel: new THREE.MeshStandardMaterial({color: 0x9aa1a8, metalness: .7, roughness: .4}),
-  wood: new THREE.MeshStandardMaterial({color: 0xd9b27a, roughness: .8, metalness: 0})
+  wood: new THREE.MeshStandardMaterial({color: 0xd9b27a, roughness: .8, metalness: 0}),
+  gold: new THREE.MeshStandardMaterial({color: 0xd4a937, metalness: .9, roughness: .28})
 };
 const stitchTex = canvasTex(64, 256, (g, w, h) => {
   g.fillStyle = "#5b3220"; g.fillRect(0, 0, w, h);

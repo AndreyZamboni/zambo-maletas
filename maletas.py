@@ -526,7 +526,7 @@ def batten(b, lo, hi, attach, g=None, step=120.0, inset=20.0):
             pt[i] = face - sd*1e-3
             _drill(pl, pt)
             nv = [0, 0, 0]; nv[i] = sd
-            hcyl(b, tuple(pt), 3.6, 1.2, tuple(nv), m="screw", g=g)
+            hcyl(b, tuple(pt), 3.6, 1.2, tuple(nv), m="gold", g=g)
             b.fix["madeira"] = b.fix.get("madeira", 0) + 1
 
 
@@ -591,8 +591,14 @@ def build_D():
         rails[nm] = y0 + 30
         for x in (xi0 + SR + 30, 0.0, xi1 - SR - 30):
             pt = (x, y0 + 15, 1e-3); _drill(par, pt, 3.0)
-            hcyl(b, (x, y0 + 15, -0.6), 3.6, 1.2, (0, 0, 1), m="screw", g="mov")
+            hcyl(b, (x, y0 + 15, -0.6), 3.6, 1.2, (0, 0, 1), m="gold", g="mov")
             b.fix["curto"] = b.fix.get("curto", 0) + 1
+    # logos (mesmas posições da Escada de encaixe)
+    b.engr(lip, "principal", (0, (T + hl)/2, D), (0,0,1), (0,1,0), 92)
+    b.engr(back, "principal", (0, Hb*0.5, 0), (0,0,-1), (0,1,0), 360)
+    b.engr(back, "principal", (xi1 - 128, ysh + T + 95, T), (0,0,1), (0,1,0), 150)
+    b.engr(Ls, "selo", (X0, 98, 140), (-1,0,0), (0,1,0), 118)
+    b.engr(Rs, "selo", (X1, 98, 140), (1,0,0), (0,1,0), 118)
     # ---------- produtos ----------
     fl = T
     rx = [xi0 + 3 + COB["D"]/2 + k*(COB["D"] + 6) for k in range(3)]; zr = T + SR + 1 + COB["L"]/2
