@@ -29,7 +29,9 @@ def nest(plates):
             sheets.append([]); shelves.append([]); assert place(len(sheets)-1, dict(d))
     return sheets
 
-b = [x for x in BUILDS if x.key == "B"][0]
+KEY = os.environ.get("KEY", "B")
+b = [x for x in BUILDS if x.key == KEY][0]
+SLUG = {"B": "B_escada", "D": "D_escada_parafusada"}[KEY]
 plates = [p for _ in range(COPIES) for p in b.plates]
 sheets = nest(plates)
 doc = ezdxf.new("R2010"); doc.units = ezdxf.units.MM
@@ -45,8 +47,8 @@ for si, sh in enumerate(sheets):
         for r in pl.interiors:
             msp.add_lwpolyline(list(r.coords), close=True, dxfattribs={"layer": "CORTE_INTERNO"})
         c = pl.representative_point()
-        msp.add_text(f'B{d["n"]} {d["p"].name}' if COPIES > 1 else f'B {d["p"].name}', height=14, dxfattribs={"layer": "ETIQUETAS_NAO_CORTAR"}).set_placement((c.x, c.y))
-out = f"maletas/maleta_B_escada_chapa_2750x1840_{T:g}mm" + (f"_{COPIES}x" if COPIES > 1 else "") + ".dxf"
+        msp.add_text(f'{KEY}{d["n"]} {d["p"].name}' if COPIES > 1 else f'{KEY} {d["p"].name}', height=14, dxfattribs={"layer": "ETIQUETAS_NAO_CORTAR"}).set_placement((c.x, c.y))
+out = f"maletas/maleta_{SLUG}_chapa_2750x1840_{T:g}mm" + (f"_{COPIES}x" if COPIES > 1 else "") + ".dxf"
 doc.saveas(out)
 used = sum(p.poly.area for p in plates)
 print(out, "| chapas", len(sheets), "| pecas", len(plates), "| aproveitamento", round(100*used/(SW*SH*len(sheets))), "%")
